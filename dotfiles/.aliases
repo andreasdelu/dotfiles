@@ -1,0 +1,16 @@
+# Navigation
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias .....="cd ../../../.."
+alias ......="cd ../../../../.."
+alias .......="cd ../../../../../.."
+
+# Configs
+alias zshconfig="nano ~/.zshrc"
+alias aliases="nano ~/.oh-my-zsh/custom/aliases.zsh"
+alias ghostty="nano ~/Library/Application\ Support/com.mitchellh.ghostty/config"
+alias gitconfig="nano ~/.gitconfig"
+
+# Git
+alias gclean='git reset --soft $(git merge-base HEAD main)'

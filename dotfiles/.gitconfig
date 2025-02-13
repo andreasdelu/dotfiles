@@ -1,0 +1,7 @@
+[user]
+	name = Andreas Deleuran
+	email = andreasdelu@gmail.com
+[core]
+	editor = nano
+[pull]
+	rebase = true
