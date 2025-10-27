@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -e
 
+confirm() {
+  local prompt="${1:-Proceed?} [y/N] "
+  read -n 1 -r -p "$prompt" reply
+  echo
+  [[ "$reply" =~ ^[Yy]$ ]]
+}
+
 set_macos_defaults() {
   echo "Configuring macOS settings..."
   read -p "Enter sudo password: " -s SUDO_PASSWORD
@@ -20,4 +27,13 @@ set_macos_defaults() {
   echo "macOS defaults configured."
 }
 
-set_macos_defaults 
+main() {
+  if ! confirm "Do you want to configure macOS system defaults?"; then
+    echo "Skipping macOS system defaults configuration."
+    return
+  fi
+
+  set_macos_defaults
+}
+
+main "$@" 

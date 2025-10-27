@@ -1,0 +1,4 @@
+.ghostty=~/Library/Application Support/com.mitchellh.ghostty/config
+.gitconfig=~/.gitconfig
+.zshrc=~/.zshrc
+nvim=~/.config/nvim
