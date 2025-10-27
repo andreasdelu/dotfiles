@@ -9,6 +9,12 @@ git clone https://github.com/andreasdelu/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 ```
 
+**Make the `bootstrap.sh` script executable**
+
+```shell
+sudo chmod +x ./bootstrap.sh
+```
+
 **Run the `bootstrap.sh` script**
 
 ```shell
