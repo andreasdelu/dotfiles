@@ -3,6 +3,7 @@ cask "ghostty"
 cask "spotify"
 cask "arc"
 cask "raycast"
+cask "cursor"
 
 # Formulae
 brew "node"
