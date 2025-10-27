@@ -9,6 +9,10 @@ plugins=(git aliases fzf z timer zsh-autosuggestions)
 
 source $ZSH/oh-my-zsh.sh
 
+if [ -f "$HOME/.dotfiles/.env.local" ]; then
+    . "$HOME/.dotfiles/.env.local"
+fi
+
 alias zshconfig="nvim ~/.zshrc"
 alias gtmp='git checkout -b TEMP-$(git rev-parse --abbrev-ref HEAD)'
 alias gclean='git reset --soft $(git merge-base HEAD main)'
@@ -41,8 +45,6 @@ updatedotfiles() {
   local dotfiles_dir="$HOME/.dotfiles"
   git -C "$dotfiles_dir" pull origin main && "$dotfiles_dir/bootstrap.sh"
 }
-
-. /opt/homebrew/opt/asdf/libexec/asdf.sh
 
 export PATH="/Users/andreasdeleuran/.bun/bin:$PATH"
 

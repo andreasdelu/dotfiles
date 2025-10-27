@@ -9,14 +9,6 @@ vim.opt.expandtab = true
 vim.keymap.set('n', '<leader>cc', '<cmd>ClaudeCode<CR>', { desc = 'Toggle Claude Code' })
 
 return {
-  --{
-  --dir = vim.fn.stdpath 'config',
-  --lazy = false,
-  --priority = 1000,
-  --config = function()
-  --vim.cmd.colorscheme 'dark-modern' -- this calls colors/dark-modern.lua
-  --end,
-  --},
   {
     'rockyzhang24/arctic.nvim',
     dependencies = { 'rktjmp/lush.nvim' },
@@ -42,7 +34,7 @@ return {
         window = { position = 'left', width = 30 },
         filesystem = {
           follow_current_file = { enabled = true },
-          filtered_items = { visible = false },
+          filtered_items = { visible = true },
         },
         default_component_configs = {
           git_status = { symbols = {} },
