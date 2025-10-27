@@ -18,7 +18,7 @@ alias td='task dev'
 alias tdg='task dev:enable-goodjob'
 alias tgqd='task graphql:dump'
 alias gglm='git pull origin main'
-alias ls='eza --icons=always'
+alias ls='eza --icons=always -a'
 
 # Functions
 gfixup() {
@@ -35,6 +35,11 @@ grbia() {
     return 1
   fi
   git rebase -i --autosquash "$1"~
+}
+
+updatedotfiles() {
+  local dotfiles_dir="$HOME/.dotfiles"
+  git -C "$dotfiles_dir" pull origin main && "$dotfiles_dir/bootstrap.sh"
 }
 
 . /opt/homebrew/opt/asdf/libexec/asdf.sh
