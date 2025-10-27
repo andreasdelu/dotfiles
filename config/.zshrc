@@ -9,9 +9,7 @@ plugins=(git aliases fzf z timer zsh-autosuggestions)
 
 source $ZSH/oh-my-zsh.sh
 
-if [ -f "$HOME/.dotfiles/.env.local" ]; then
-    . "$HOME/.dotfiles/.env.local"
-fi
+
 
 alias zshconfig="nvim ~/.zshrc"
 alias gtmp='git checkout -b TEMP-$(git rev-parse --abbrev-ref HEAD)'

@@ -1,4 +1,5 @@
 .backup_*
 .claude
 .DS_Store
-.env*
+.env.*
+.env

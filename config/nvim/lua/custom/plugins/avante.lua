@@ -1,5 +1,6 @@
 return {
   'yetone/avante.nvim',
+  build = vim.fn.has 'win32' ~= 0 and 'powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false' or 'make',
   event = 'VeryLazy',
   version = false, -- Never set this value to "*"! Never!
   opts = {
@@ -11,12 +12,21 @@ return {
     providers = {
       claude = {
         endpoint = 'https://api.anthropic.com',
-        model = 'claude-sonnet-4.5',
+        model = 'claude-haiku-4-5',
         timeout = 30000, -- Timeout in milliseconds
         extra_request_body = {
           temperature = 0.75,
           max_tokens = 20480,
         },
+      },
+    },
+    mappings = {
+      --- @class AvanteConflictMappings
+      suggestion = {
+        accept = '<C-l>',
+        next = '<M-]>',
+        prev = '<M-[>',
+        dismiss = '<C-]>',
       },
     },
   },
