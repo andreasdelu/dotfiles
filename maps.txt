@@ -2,3 +2,4 @@
 .gitconfig=~/.gitconfig
 .zshrc=~/.zshrc
 nvim=~/.config/nvim
+karabiner.json=~/.config/karabiner/karabiner.json

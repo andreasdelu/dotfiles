@@ -4,6 +4,7 @@ cask "spotify"
 cask "arc"
 cask "raycast"
 cask "cursor"
+cask "karabiner-elements"
 
 # Formulae
 brew "node"
