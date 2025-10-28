@@ -44,6 +44,10 @@ updatedotfiles() {
   git -C "$dotfiles_dir" pull origin main && "$dotfiles_dir/bootstrap.sh"
 }
 
+if [ -f /opt/homebrew/opt/asdf/libexec/asdf.sh ]; then
+  . /opt/homebrew/opt/asdf/libexec/asdf.sh
+fi
+
 export PATH="/Users/andreasdeleuran/.bun/bin:$PATH"
 
 export GOOGLE_CLOUD_PROJECT="andreas-landfolk-api-testing"
