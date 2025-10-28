@@ -2,6 +2,6 @@
 	name = Andreas Deleuran
 	email = andreasdelu@gmail.com
 [core]
-	editor = nvim
+	editor = "nvim -u ~/.config/nvim/minimal.lua"
 [pull]
 	rebase = true
