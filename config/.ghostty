@@ -1,6 +1,23 @@
 theme = adwaita dark
 font-size = 12
-window-width = 100
+window-width = 120
 window-height = 30
-keybind = global:option+cmd+t=toggle_quick_terminal
-keybind = shift+enter=text:\n
+macos-titlebar-style = tabs
+
+shell-integration = zsh
+mouse-hide-while-typing = true
+scrollback-limit = 1000000
+
+
+keybind = super+h=goto_split:left
+keybind = super+j=goto_split:bottom
+keybind = super+k=goto_split:top
+keybind = super+l=goto_split:right
+
+keybind = super+shift+h=new_split:left
+keybind = super+shift+j=new_split:down
+keybind = super+shift+k=new_split:up
+keybind = super+shift+l=new_split:right
+
+keybind = super+shift+n=next_tab
+keybind = super+shift+p=previous_tab
