@@ -9,7 +9,8 @@ plugins=(git aliases fzf z timer zsh-autosuggestions)
 
 source $ZSH/oh-my-zsh.sh
 
-
+# direnv - mostly used for Nix
+eval "$(direnv hook zsh)"
 
 alias zshconfig="nvim ~/.zshrc"
 alias gtmp='git checkout -b TEMP-$(git rev-parse --abbrev-ref HEAD)'
@@ -21,6 +22,14 @@ alias tdg='task dev:enable-goodjob'
 alias tgqd='task graphql:dump'
 alias gglm='git pull origin main'
 alias ls='eza --icons=always -a'
+alias ts='echo -e "\n\033[1;35m--- 🕒 SYSTEM TIMESTAMPS ---\033[0m"; \
+echo -e "\033[1;32mLocal     :\033[0m \033[36m$(date "+%A, %B %d, %Y %H:%M:%S")\033[0m"; \
+echo -e "\033[1;32mISO-8601  :\033[0m \033[33m$(date "+%Y-%m-%dT%H:%M:%S%z")\033[0m"; \
+echo -e "\033[1;32mUnix Epoch:\033[0m \033[1;37m$(date +%s)\033[0m"; \
+echo -e "\033[1;32mUTC/Zulu  :\033[0m \033[34m$(date -u "+%H:%M:%S UTC")\033[0m"; \
+echo -e "\033[1;32mFilename  :\033[0m \033[90m$(date "+%Y%m%d%H%M%S")\033[0m"; \
+echo -e "\033[1;35m----------------------------\033[0m\n"'
+
 
 # Functions
 gfixup() {
@@ -44,10 +53,6 @@ updatedotfiles() {
   git -C "$dotfiles_dir" pull origin main && "$dotfiles_dir/bootstrap.sh"
 }
 
-if [ -f /opt/homebrew/opt/asdf/libexec/asdf.sh ]; then
-  . /opt/homebrew/opt/asdf/libexec/asdf.sh
-fi
-
 export PATH="/Users/andreasdeleuran/.bun/bin:$PATH"
 
 export GOOGLE_CLOUD_PROJECT="andreas-landfolk-api-testing"
@@ -61,3 +66,5 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
+export PATH="$HOME/.local/bin:$PATH"

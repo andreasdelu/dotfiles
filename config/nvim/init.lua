@@ -3,9 +3,14 @@
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
+
+-- Enable full RGB colors in the terminal so themes don't fall back to muted 256-color approximations.
+vim.opt.termguicolors = true
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -130,6 +135,20 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
   callback = function()
     vim.hl.on_yank()
+  end,
+})
+
+vim.api.nvim_create_autocmd('VimEnter', {
+  desc = 'Replace directory startup with an empty buffer',
+  group = vim.api.nvim_create_augroup('custom-start-empty-dir', { clear = true }),
+  callback = function()
+    if vim.fn.argc() == 1 then
+      local arg = vim.fn.argv(0)
+      if vim.fn.isdirectory(arg) == 1 then
+        vim.cmd.cd(arg)
+        vim.cmd.enew()
+      end
+    end
   end,
 })
 
@@ -439,6 +458,7 @@ require('lazy').setup({
       vim.api.nvim_create_autocmd('LspAttach', {
         group = vim.api.nvim_create_augroup('kickstart-lsp-attach', { clear = true }),
         callback = function(event)
+          local client = vim.lsp.get_client_by_id(event.data.client_id)
           -- NOTE: Remember that Lua is a real programming language, and as such it is possible
           -- to define small helper and utility functions so you don't have to repeat yourself.
           --
@@ -456,6 +476,17 @@ require('lazy').setup({
           -- Execute a code action, usually your cursor needs to be on top of an error
           -- or a suggestion from your LSP for this to activate.
           map('gra', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
+          map('<leader>.', vim.lsp.buf.code_action, 'Code Action', { 'n', 'x' })
+
+          if client and client.name == 'eslint' then
+            map('<leader>lf', '<cmd>LspEslintFixAll<CR>', 'Eslint [F]ix All')
+
+            vim.api.nvim_create_autocmd('BufWritePre', {
+              buffer = event.buf,
+              group = vim.api.nvim_create_augroup('custom-eslint-fix-on-save', { clear = false }),
+              command = 'silent! LspEslintFixAll',
+            })
+          end
 
           -- Find references for the word under your cursor.
           map('grr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
@@ -612,6 +643,28 @@ require('lazy').setup({
             },
           },
         },
+        ts_ls = {},
+        eslint = {
+          settings = {
+            codeActionOnSave = {
+              enable = true,
+              mode = 'all',
+            },
+            workingDirectory = { mode = 'auto' },
+          },
+        },
+        ruby_lsp = {
+          mason = false,
+          cmd = { 'ruby-lsp' },
+          filetypes = { 'ruby', 'eruby' },
+          root_markers = { 'Gemfile', '.git' },
+        },
+        sorbet = {
+          mason = false,
+          cmd = { 'bundle', 'exec', 'srb', 'tc', '--lsp', '--disable-watchman' },
+          filetypes = { 'ruby', 'eruby' },
+          root_markers = { 'sorbet/config', 'Gemfile', '.git' },
+        },
       }
 
       -- Ensure the servers and tools above are installed
@@ -627,9 +680,12 @@ require('lazy').setup({
       --
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
-      local ensure_installed = vim.tbl_keys(servers or {})
+      local ensure_installed = vim.tbl_filter(function(server_name)
+        return servers[server_name].mason ~= false
+      end, vim.tbl_keys(servers or {}))
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'prettierd', -- Used to format JS/TS and related web files
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -643,10 +699,21 @@ require('lazy').setup({
             -- by the server configuration above. Useful when disabling
             -- certain features of an LSP (for example, turning off formatting for ts_ls)
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
+            server.mason = nil
+            vim.lsp.config(server_name, server)
+            vim.lsp.enable(server_name)
           end,
         },
       }
+
+      for server_name, server in pairs(servers) do
+        if server.mason == false then
+          server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+          server.mason = nil
+          vim.lsp.config(server_name, server)
+          vim.lsp.enable(server_name)
+        end
+      end
     end,
   },
 
@@ -658,30 +725,65 @@ require('lazy').setup({
       {
         '<leader>f',
         function()
-          require('conform').format { async = true, lsp_format = 'fallback' }
+          local bufnr = vim.api.nvim_get_current_buf()
+          local has_eslint = #vim.lsp.get_clients { bufnr = bufnr, name = 'eslint' } > 0
+
+          if has_eslint then
+            pcall(vim.cmd, 'LspEslintFixAll')
+          end
+
+          require('conform').format { async = false, lsp_format = 'never' }
         end,
         mode = '',
-        desc = '[F]ormat buffer',
+        desc = '[F]ix and format buffer',
       },
     },
     opts = {
       notify_on_error = false,
       format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
-        if disable_filetypes[vim.bo[bufnr].filetype] then
+        local format_on_save_filetypes = {
+          lua = true,
+          javascript = true,
+          javascriptreact = true,
+          typescript = true,
+          typescriptreact = true,
+          ruby = true,
+          json = true,
+          jsonc = true,
+          css = true,
+          scss = true,
+          markdown = true,
+        }
+
+        if not format_on_save_filetypes[vim.bo[bufnr].filetype] then
           return nil
         else
           return {
-            timeout_ms = 500,
-            lsp_format = 'fallback',
+            timeout_ms = 1000,
+            lsp_format = 'never',
           }
         end
       end,
+      formatters = {
+        syntax_tree = {
+          command = 'bin/stree',
+          cwd = function(self, ctx)
+            return require('conform.util').root_file { 'Gemfile', '.git' }(self, ctx)
+          end,
+        },
+      },
       formatters_by_ft = {
         lua = { 'stylua' },
+        javascript = { 'prettierd', 'prettier', stop_after_first = true },
+        javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+        typescript = { 'prettierd', 'prettier', stop_after_first = true },
+        typescriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+        ruby = { 'syntax_tree' },
+        json = { 'prettierd', 'prettier', stop_after_first = true },
+        jsonc = { 'prettierd', 'prettier', stop_after_first = true },
+        css = { 'prettierd', 'prettier', stop_after_first = true },
+        scss = { 'prettierd', 'prettier', stop_after_first = true },
+        markdown = { 'prettierd', 'prettier', stop_after_first = true },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -749,7 +851,7 @@ require('lazy').setup({
         -- <c-k>: Toggle signature help
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'default',
+        preset = 'super-tab',
 
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps

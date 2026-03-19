@@ -10,13 +10,16 @@ vim.keymap.set('n', '<leader>cc', '<cmd>ClaudeCode<CR>', { desc = 'Toggle Claude
 
 return {
   {
-    'rockyzhang24/arctic.nvim',
-    dependencies = { 'rktjmp/lush.nvim' },
-    name = 'arctic',
-    branch = 'v2',
+    'gmr458/vscode_modern_theme.nvim',
+    name = 'vscode_modern',
     priority = 1000,
     config = function()
-      vim.cmd 'colorscheme arctic'
+      require('vscode_modern').setup {
+        cursorline = true,
+        transparent_background = false,
+        nvim_tree_darker = true,
+      }
+      vim.cmd.colorscheme 'vscode_modern'
     end,
   },
   {
@@ -34,6 +37,7 @@ return {
         window = { position = 'left', width = 30 },
         filesystem = {
           follow_current_file = { enabled = true },
+          hijack_netrw_behavior = 'disabled',
           filtered_items = { visible = true },
         },
         default_component_configs = {
