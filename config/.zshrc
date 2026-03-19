@@ -10,7 +10,7 @@ plugins=(git aliases fzf z timer zsh-autosuggestions)
 source $ZSH/oh-my-zsh.sh
 
 # direnv - mostly used for Nix
-eval "$(direnv hook zsh)"
+(( $+commands[direnv] )) && eval "$(direnv hook zsh)"
 
 alias zshconfig="nvim ~/.zshrc"
 alias gtmp='git checkout -b TEMP-$(git rev-parse --abbrev-ref HEAD)'
