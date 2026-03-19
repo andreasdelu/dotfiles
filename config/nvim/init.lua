@@ -498,7 +498,7 @@ require('lazy').setup({
           -- Jump to the definition of the word under your cursor.
           --  This is where a variable was first declared, or where a function is defined, etc.
           --  To jump back, press <C-t>.
-          map('grd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+          map('grd', vim.lsp.buf.definition, '[G]oto [D]efinition')
 
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header.
@@ -658,12 +658,19 @@ require('lazy').setup({
           cmd = { 'ruby-lsp' },
           filetypes = { 'ruby', 'eruby' },
           root_markers = { 'Gemfile', '.git' },
+          on_new_config = function(config, root_dir)
+            config.cmd_cwd = root_dir
+          end,
         },
         sorbet = {
           mason = false,
-          cmd = { 'bundle', 'exec', 'srb', 'tc', '--lsp', '--disable-watchman' },
+          cmd = { 'srb', 'tc', '--lsp', '--disable-watchman' },
           filetypes = { 'ruby', 'eruby' },
           root_markers = { 'sorbet/config', 'Gemfile', '.git' },
+          on_new_config = function(config, root_dir)
+            config.cmd_cwd = root_dir
+            config.cmd = { 'srb', 'tc', '--lsp', '--disable-watchman', '--dir', root_dir }
+          end,
         },
       }
 

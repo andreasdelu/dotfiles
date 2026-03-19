@@ -23,6 +23,10 @@ return {
     end,
   },
   {
+    'christoomey/vim-tmux-navigator',
+    lazy = false,
+  },
+  {
 
     'nvim-neo-tree/neo-tree.nvim',
     branch = 'v3.x',
