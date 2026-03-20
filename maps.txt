@@ -3,3 +3,5 @@
 .zshrc=~/.zshrc
 nvim=~/.config/nvim
 karabiner.json=~/.config/karabiner/karabiner.json
+.tmux.conf=~/.tmux.conf
+.tmux=~/.tmux
