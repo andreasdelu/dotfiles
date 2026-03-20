@@ -575,28 +575,20 @@ require('lazy').setup({
       -- See :help vim.diagnostic.Opts
       vim.diagnostic.config {
         severity_sort = true,
+        update_in_insert = false,
         float = { border = 'rounded', source = 'if_many' },
-        underline = { severity = vim.diagnostic.severity.ERROR },
-        signs = vim.g.have_nerd_font and {
+        underline = true,
+        signs = {
           text = {
-            [vim.diagnostic.severity.ERROR] = '󰅚 ',
-            [vim.diagnostic.severity.WARN] = '󰀪 ',
-            [vim.diagnostic.severity.INFO] = '󰋽 ',
-            [vim.diagnostic.severity.HINT] = '󰌶 ',
+            [vim.diagnostic.severity.ERROR] = 'E',
+            [vim.diagnostic.severity.WARN] = 'W',
+            [vim.diagnostic.severity.INFO] = 'I',
+            [vim.diagnostic.severity.HINT] = 'H',
           },
-        } or {},
+        },
         virtual_text = {
           source = 'if_many',
           spacing = 2,
-          format = function(diagnostic)
-            local diagnostic_message = {
-              [vim.diagnostic.severity.ERROR] = diagnostic.message,
-              [vim.diagnostic.severity.WARN] = diagnostic.message,
-              [vim.diagnostic.severity.INFO] = diagnostic.message,
-              [vim.diagnostic.severity.HINT] = diagnostic.message,
-            }
-            return diagnostic_message[diagnostic.severity]
-          end,
         },
       }
 
@@ -605,6 +597,42 @@ require('lazy').setup({
       --  When you add blink.cmp, luasnip, etc. Neovim now has *more* capabilities.
       --  So, we create new capabilities with blink.cmp, and then broadcast that to the servers.
       local capabilities = require('blink.cmp').get_lsp_capabilities()
+
+      local function normalize_diagnostic_uri(uri, root_dir)
+        if type(uri) ~= 'string' or uri == '' or uri:match '^%a[%w+.+-]*://' then
+          return uri
+        end
+
+        local path = uri
+        if not uri:match '^/' then
+          if not root_dir or root_dir == '' then
+            return uri
+          end
+          path = root_dir .. '/' .. uri
+        end
+
+        return vim.uri_from_fname(vim.fs.normalize(path))
+      end
+
+      local function sorbet_publish_diagnostics(err, result, ctx, config)
+        if result then
+          local client = vim.lsp.get_client_by_id(ctx.client_id)
+          local root_dir = client and client.config and client.config.root_dir or nil
+
+          result.uri = normalize_diagnostic_uri(result.uri, root_dir)
+
+          for _, diagnostic in ipairs(result.diagnostics or {}) do
+            for _, related in ipairs(diagnostic.relatedInformation or {}) do
+              local location = related.location
+              if location then
+                location.uri = normalize_diagnostic_uri(location.uri, root_dir)
+              end
+            end
+          end
+        end
+
+        return vim.lsp.handlers['textDocument/publishDiagnostics'](err, result, ctx, config)
+      end
 
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
@@ -654,23 +682,17 @@ require('lazy').setup({
           },
         },
         ruby_lsp = {
-          mason = false,
-          cmd = { 'ruby-lsp' },
           filetypes = { 'ruby', 'eruby' },
-          root_markers = { 'Gemfile', '.git' },
-          on_new_config = function(config, root_dir)
-            config.cmd_cwd = root_dir
-          end,
+          init_options = {
+            formatter = 'syntax_tree',
+          },
         },
         sorbet = {
-          mason = false,
           cmd = { 'srb', 'tc', '--lsp', '--disable-watchman' },
           filetypes = { 'ruby', 'eruby' },
-          root_markers = { 'sorbet/config', 'Gemfile', '.git' },
-          on_new_config = function(config, root_dir)
-            config.cmd_cwd = root_dir
-            config.cmd = { 'srb', 'tc', '--lsp', '--disable-watchman', '--dir', root_dir }
-          end,
+          handlers = {
+            ['textDocument/publishDiagnostics'] = sorbet_publish_diagnostics,
+          },
         },
       }
 
@@ -946,8 +968,77 @@ require('lazy').setup({
       --  You could remove this setup call if you don't like it,
       --  and try some other statusline plugin
       local statusline = require 'mini.statusline'
+      local function statusline_diagnostic_badge()
+        local bufnr = vim.api.nvim_get_current_buf()
+        local errors = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR })
+        local warnings = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN })
+
+        if errors > 0 and warnings > 0 then
+          return {
+            { text = string.format('ERROR %d', errors), hl = 'MiniStatuslineDiagnosticError' },
+            { text = string.format('WARN %d', warnings), hl = 'MiniStatuslineDiagnosticWarn' },
+          }
+        end
+
+        if errors > 0 then
+          return {
+            { text = string.format('ERROR %d', errors), hl = 'MiniStatuslineDiagnosticError' },
+          }
+        end
+
+        if warnings > 0 then
+          return {
+            { text = string.format('WARN %d', warnings), hl = 'MiniStatuslineDiagnosticWarn' },
+          }
+        end
+
+        return {}
+      end
+
+      local function set_statusline_diagnostic_highlights()
+        vim.api.nvim_set_hl(0, 'MiniStatuslineDiagnosticError', { fg = '#0f1117', bg = '#f7768e', bold = true })
+        vim.api.nvim_set_hl(0, 'MiniStatuslineDiagnosticWarn', { fg = '#0f1117', bg = '#e0af68', bold = true })
+      end
+
       -- set use_icons to true if you have a Nerd Font
-      statusline.setup { use_icons = vim.g.have_nerd_font }
+      statusline.setup {
+        use_icons = vim.g.have_nerd_font,
+        content = {
+          active = function()
+            local mode, mode_hl = statusline.section_mode({ trunc_width = 120 })
+            local git = statusline.section_git({ trunc_width = 40 })
+            local diff = statusline.section_diff({ trunc_width = 75 })
+            local lsp = statusline.section_lsp({ trunc_width = 75 })
+            local filename = statusline.section_filename({ trunc_width = 140 })
+            local fileinfo = statusline.section_fileinfo({ trunc_width = 120 })
+            local location = statusline.section_location({ trunc_width = 75 })
+            local search = statusline.section_searchcount({ trunc_width = 75 })
+            local diagnostic_badges = statusline_diagnostic_badge()
+
+            local groups = {
+              { hl = mode_hl, strings = { mode } },
+              { hl = 'MiniStatuslineDevinfo', strings = { git, diff, lsp } },
+              '%<',
+              { hl = 'MiniStatuslineFilename', strings = { filename } },
+            }
+
+            for _, badge in ipairs(diagnostic_badges) do
+              table.insert(groups, { hl = badge.hl, strings = { badge.text } })
+            end
+
+            table.insert(groups, '%=')
+            table.insert(groups, { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } })
+            table.insert(groups, { hl = mode_hl, strings = { search, location } })
+
+            return statusline.combine_groups(groups)
+          end,
+        },
+      }
+      set_statusline_diagnostic_highlights()
+      vim.api.nvim_create_autocmd('ColorScheme', {
+        group = vim.api.nvim_create_augroup('custom-statusline-diagnostics', { clear = true }),
+        callback = set_statusline_diagnostic_highlights,
+      })
 
       -- You can configure sections in the statusline by overriding their
       -- default behavior. For example, here we set the section for
@@ -999,7 +1090,7 @@ require('lazy').setup({
   -- require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 

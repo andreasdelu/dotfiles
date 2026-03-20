@@ -27,6 +27,34 @@ return {
     lazy = false,
   },
   {
+    'petertriho/nvim-scrollbar',
+    event = 'VeryLazy',
+    config = function()
+      require('scrollbar').setup {
+        show = true,
+        show_in_active_only = false,
+        hide_if_all_visible = false,
+        excluded_buftypes = { 'terminal', 'prompt', 'nofile' },
+        excluded_filetypes = { 'neo-tree', 'neo-tree-popup', 'TelescopePrompt' },
+        handlers = {
+          cursor = false,
+          diagnostic = true,
+          gitsigns = false,
+          handle = true,
+          search = false,
+        },
+        marks = {
+          Search = { color = '#7aa2f7' },
+          Error = { color = '#f7768e' },
+          Warn = { color = '#e0af68' },
+          Info = { color = '#7dcfff' },
+          Hint = { color = '#9ece6a' },
+          Misc = { color = '#bb9af7' },
+        },
+      }
+    end,
+  },
+  {
 
     'nvim-neo-tree/neo-tree.nvim',
     branch = 'v3.x',
