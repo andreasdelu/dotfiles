@@ -1,6 +1,46 @@
+local function telescope_config()
+  local telescope = require 'telescope'
+  telescope.setup {
+    extensions = {
+      ['ui-select'] = {
+        require('telescope.themes').get_dropdown(),
+      },
+    },
+  }
+
+  pcall(telescope.load_extension, 'fzf')
+  pcall(telescope.load_extension, 'ui-select')
+
+  local builtin = require 'telescope.builtin'
+  vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = 'Search help' })
+  vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = 'Search keymaps' })
+  vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = 'Search files' })
+  vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = 'Search Telescope pickers' })
+  vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = 'Search current word' })
+  vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = 'Search by grep' })
+  vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = 'Search diagnostics' })
+  vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = 'Search resume' })
+  vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = 'Search recent files' })
+  vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = 'Find existing buffers' })
+  vim.keymap.set('n', '<leader>/', function()
+    builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+      winblend = 10,
+      previewer = false,
+    })
+  end, { desc = 'Search in current buffer' })
+  vim.keymap.set('n', '<leader>s/', function()
+    builtin.live_grep {
+      grep_open_files = true,
+      prompt_title = 'Live Grep in Open Files',
+    }
+  end, { desc = 'Search in open files' })
+  vim.keymap.set('n', '<leader>sn', function()
+    builtin.find_files { cwd = vim.fn.stdpath 'config' }
+  end, { desc = 'Search Neovim files' })
+end
+
 local function git_root()
-  local root = vim.fs.root(0, { '.git' })
-  return root or vim.fn.getcwd()
+  return vim.fs.root(0, { '.git' }) or vim.fn.getcwd()
 end
 
 local function system_lines(cmd, cwd)
@@ -9,8 +49,7 @@ local function system_lines(cmd, cwd)
     return nil, (result.stderr or result.stdout or ''):gsub('%s+$', '')
   end
 
-  local lines = vim.split(result.stdout or '', '\n', { trimempty = true })
-  return lines, nil
+  return vim.split(result.stdout or '', '\n', { trimempty = true }), nil
 end
 
 local function system_text(cmd, cwd)
@@ -46,9 +85,7 @@ local function parse_hunks(diff_text)
   local first_line
 
   for line in diff_text:gmatch '[^\n]+' do
-    local minus_start, minus_count, plus_start, plus_count =
-      line:match '^@@ %-(%d+),?(%d*) %+(%d+),?(%d*) @@'
-
+    local minus_start, minus_count, plus_start, plus_count = line:match '^@@ %-(%d+),?(%d*) %+(%d+),?(%d*) @@'
     if plus_start then
       minus_start = tonumber(minus_start)
       minus_count = tonumber(minus_count ~= '' and minus_count or '1')
@@ -63,11 +100,8 @@ local function parse_hunks(diff_text)
       end
 
       local target_line = plus_count == 0 and math.max(plus_start - 1, 1) or plus_start
-      local last_line = plus_count == 0 and target_line or (plus_start + plus_count - 1)
-
-      if not first_line then
-        first_line = target_line
-      end
+      local last_line = plus_count == 0 and target_line or plus_start + plus_count - 1
+      first_line = first_line or target_line
 
       table.insert(hunks, {
         first_line = target_line,
@@ -96,7 +130,7 @@ end
 local function git_change_previewer()
   local previewers = require 'telescope.previewers'
   local conf = require('telescope.config').values
-  local preview_ns = vim.api.nvim_create_namespace 'custom-telescope-git-changes'
+  local preview_ns = vim.api.nvim_create_namespace 'config-telescope-git-changes'
 
   local function apply_hunk_preview(bufnr, winid, hunks, first_line)
     vim.api.nvim_buf_clear_namespace(bufnr, preview_ns, 0, -1)
@@ -193,8 +227,7 @@ local function worktree_changes()
   local results = {}
   for _, line in ipairs(lines) do
     local status = line:sub(1, 2)
-    local relative = line:sub(4)
-    relative = relative:gsub('^.+ %-%> ', '')
+    local relative = line:sub(4):gsub('^.+ %-%> ', '')
     if relative ~= '' then
       table.insert(results, {
         display = string.format('%s %s', status, relative),
@@ -211,10 +244,7 @@ local function worktree_changes()
     return
   end
 
-  open_picker {
-    title = 'Git Worktree Changes',
-    results = results,
-  }
+  open_picker { title = 'Git Worktree Changes', results = results }
 end
 
 local function branch_changes()
@@ -249,18 +279,77 @@ local function branch_changes()
     return
   end
 
-  open_picker {
-    title = 'Git Branch Changes',
-    results = results,
-  }
+  open_picker { title = 'Git Branch Changes', results = results }
 end
 
 return {
   {
+    'christoomey/vim-tmux-navigator',
+    lazy = false,
+  },
+  {
     'nvim-telescope/telescope.nvim',
-    keys = {
-      { '<leader>gw', worktree_changes, desc = '[G]it [W]orktree changes' },
-      { '<leader>gb', branch_changes, desc = '[G]it [B]ranch changes' },
+    event = 'VimEnter',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      {
+        'nvim-telescope/telescope-fzf-native.nvim',
+        build = 'make',
+        cond = function()
+          return vim.fn.executable 'make' == 1
+        end,
+      },
+      'nvim-telescope/telescope-ui-select.nvim',
+      { 'nvim-tree/nvim-web-devicons', enabled = true },
     },
+    config = telescope_config,
+    keys = {
+      { '<leader>gw', worktree_changes, desc = 'Git worktree changes' },
+      { '<leader>gb', branch_changes, desc = 'Git branch changes' },
+    },
+  },
+  {
+    'nvim-neo-tree/neo-tree.nvim',
+    branch = 'v3.x',
+    lazy = false,
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-tree/nvim-web-devicons',
+      'MunifTanjim/nui.nvim',
+      's1n7ax/nvim-window-picker',
+    },
+    opts = {
+      window = { position = 'left', width = 30 },
+      filesystem = {
+        follow_current_file = { enabled = true },
+        hijack_netrw_behavior = 'disabled',
+        filtered_items = { visible = true },
+      },
+      default_component_configs = {
+        git_status = { symbols = {} },
+      },
+    },
+  },
+  {
+    's1n7ax/nvim-window-picker',
+    version = '2.*',
+    opts = {
+      filter_rules = {
+        include_current_win = false,
+        autoselect_one = true,
+        bo = {
+          filetype = { 'neo-tree', 'neo-tree-popup', 'notify' },
+          buftype = { 'terminal', 'quickfix' },
+        },
+      },
+    },
+  },
+  {
+    'antosha417/nvim-lsp-file-operations',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-neo-tree/neo-tree.nvim',
+    },
+    opts = {},
   },
 }

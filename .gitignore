@@ -1,7 +1,8 @@
 .backup_*
 .claude
 .DS_Store
+**/.DS_Store
 .env.*
 .env
-.nvimlog
 **/.nvimlog
+.nvimlog
