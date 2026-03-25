@@ -207,6 +207,7 @@ require('lazy').setup({
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
     opts = {
+      update_debounce = 50,
       signs = {
         add = { text = '+' },
         change = { text = '~' },
@@ -672,6 +673,7 @@ require('lazy').setup({
           },
         },
         ts_ls = {},
+        graphql = {},
         eslint = {
           settings = {
             codeActionOnSave = {
@@ -998,6 +1000,65 @@ require('lazy').setup({
       local function set_statusline_diagnostic_highlights()
         vim.api.nvim_set_hl(0, 'MiniStatuslineDiagnosticError', { fg = '#0f1117', bg = '#f7768e', bold = true })
         vim.api.nvim_set_hl(0, 'MiniStatuslineDiagnosticWarn', { fg = '#0f1117', bg = '#e0af68', bold = true })
+        vim.api.nvim_set_hl(0, 'MiniStatuslineGitAdd', { fg = '#9ece6a', bold = true })
+        vim.api.nvim_set_hl(0, 'MiniStatuslineGitChange', { fg = '#7dcfff', bold = true })
+        vim.api.nvim_set_hl(0, 'MiniStatuslineGitDelete', { fg = '#f7768e', bold = true })
+        vim.api.nvim_set_hl(0, 'MiniStatuslineModified', { fg = '#0f1117', bg = '#e0af68', bold = true })
+      end
+
+      local function statusline_git_totals()
+        local git = vim.b.gitsigns_status_dict
+        if type(git) ~= 'table' then
+          return ''
+        end
+
+        local parts = {}
+        if (git.added or 0) > 0 then
+          table.insert(parts, string.format('%%#MiniStatuslineGitAdd# +%d', git.added))
+        end
+        if (git.changed or 0) > 0 then
+          table.insert(parts, string.format('%%#MiniStatuslineGitChange#~%d', git.changed))
+        end
+        if (git.removed or 0) > 0 then
+          table.insert(parts, string.format('%%#MiniStatuslineGitDelete#-%d', git.removed))
+        end
+
+        return table.concat(parts, '')
+      end
+
+      local function statusline_filename()
+        return statusline.section_filename({ trunc_width = 140 })
+      end
+
+      local function format_filesize()
+        local bufname = vim.api.nvim_buf_get_name(0)
+        if bufname == '' then
+          return ''
+        end
+
+        local size = vim.fn.getfsize(bufname)
+        if size <= 0 then
+          return ''
+        end
+
+        local units = { 'B', 'K', 'M', 'G' }
+        local value = size
+        local unit = units[1]
+
+        for i = 2, #units do
+          if value < 1024 then
+            break
+          end
+
+          value = value / 1024
+          unit = units[i]
+        end
+
+        if unit == 'B' then
+          return string.format('%d%s', value, unit)
+        end
+
+        return string.format('%.1f%s', value, unit)
       end
 
       -- set use_icons to true if you have a Nerd Font
@@ -1006,10 +1067,9 @@ require('lazy').setup({
         content = {
           active = function()
             local mode, mode_hl = statusline.section_mode({ trunc_width = 120 })
-            local git = statusline.section_git({ trunc_width = 40 })
-            local diff = statusline.section_diff({ trunc_width = 75 })
+            local git = statusline_git_totals()
             local lsp = statusline.section_lsp({ trunc_width = 75 })
-            local filename = statusline.section_filename({ trunc_width = 140 })
+            local filename = statusline_filename()
             local fileinfo = statusline.section_fileinfo({ trunc_width = 120 })
             local location = statusline.section_location({ trunc_width = 75 })
             local search = statusline.section_searchcount({ trunc_width = 75 })
@@ -1017,7 +1077,8 @@ require('lazy').setup({
 
             local groups = {
               { hl = mode_hl, strings = { mode } },
-              { hl = 'MiniStatuslineDevinfo', strings = { git, diff, lsp } },
+              { hl = 'MiniStatuslineModified', strings = vim.bo.modified and { '*' } or {} },
+              { hl = 'MiniStatuslineDevinfo', strings = { lsp } },
               '%<',
               { hl = 'MiniStatuslineFilename', strings = { filename } },
             }
@@ -1027,6 +1088,7 @@ require('lazy').setup({
             end
 
             table.insert(groups, '%=')
+            table.insert(groups, git)
             table.insert(groups, { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } })
             table.insert(groups, { hl = mode_hl, strings = { search, location } })
 
@@ -1039,6 +1101,13 @@ require('lazy').setup({
         group = vim.api.nvim_create_augroup('custom-statusline-diagnostics', { clear = true }),
         callback = set_statusline_diagnostic_highlights,
       })
+      vim.api.nvim_create_autocmd('User', {
+        group = vim.api.nvim_create_augroup('custom-statusline-gitsigns', { clear = true }),
+        pattern = 'GitSignsUpdate',
+        callback = vim.schedule_wrap(function()
+          vim.cmd 'redrawstatus'
+        end),
+      })
 
       -- You can configure sections in the statusline by overriding their
       -- default behavior. For example, here we set the section for
@@ -1046,6 +1115,22 @@ require('lazy').setup({
       ---@diagnostic disable-next-line: duplicate-set-field
       statusline.section_location = function()
         return '%2l:%-2v'
+      end
+
+      ---@diagnostic disable-next-line: duplicate-set-field
+      statusline.section_fileinfo = function(args)
+        if statusline.is_truncated(args.trunc_width) then
+          return ''
+        end
+
+        local filetype = vim.bo.filetype ~= '' and vim.bo.filetype or 'no ft'
+        local size = format_filesize()
+
+        if size ~= '' then
+          return string.format('%s %s', filetype, size)
+        end
+
+        return filetype
       end
 
       -- ... and there is more!
@@ -1058,7 +1143,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'diff', 'graphql', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {

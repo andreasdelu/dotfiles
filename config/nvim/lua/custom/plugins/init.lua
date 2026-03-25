@@ -7,6 +7,18 @@ vim.opt.softtabstop = 4
 vim.opt.expandtab = true
 
 vim.keymap.set('n', '<leader>cc', '<cmd>ClaudeCode<CR>', { desc = 'Toggle Claude Code' })
+vim.keymap.set('n', '<leader>cl', function()
+  local path = vim.fn.expand '%:p'
+  if path == '' then
+    vim.notify('No file path to copy', vim.log.levels.WARN)
+    return
+  end
+
+  local line = vim.api.nvim_win_get_cursor(0)[1]
+  local location = string.format('%s:%d', path, line)
+  vim.fn.setreg('+', location)
+  vim.notify('Copied ' .. location, vim.log.levels.INFO)
+end, { desc = '[C]opy file [L]ocation' })
 
 return {
   {
@@ -14,12 +26,27 @@ return {
     name = 'vscode_modern',
     priority = 1000,
     config = function()
+      local function apply_bg_override()
+        local bg = '#1F1F1F'
+        vim.api.nvim_set_hl(0, 'Normal', { bg = bg })
+        vim.api.nvim_set_hl(0, 'NormalNC', { bg = bg })
+        vim.api.nvim_set_hl(0, 'SignColumn', { bg = bg })
+        vim.api.nvim_set_hl(0, 'EndOfBuffer', { bg = bg })
+      end
+
       require('vscode_modern').setup {
         cursorline = true,
         transparent_background = false,
         nvim_tree_darker = true,
+        custom_dark_background = '#1F1F1F',
       }
       vim.cmd.colorscheme 'vscode_modern'
+      apply_bg_override()
+      vim.api.nvim_create_autocmd('ColorScheme', {
+        group = vim.api.nvim_create_augroup('custom-vscode-modern-bg', { clear = true }),
+        pattern = 'vscode_modern',
+        callback = apply_bg_override,
+      })
     end,
   },
   {
@@ -39,7 +66,7 @@ return {
         handlers = {
           cursor = false,
           diagnostic = true,
-          gitsigns = false,
+          gitsigns = true,
           handle = true,
           search = false,
         },
@@ -50,6 +77,9 @@ return {
           Info = { color = '#7dcfff' },
           Hint = { color = '#9ece6a' },
           Misc = { color = '#bb9af7' },
+          GitAdd = { color = '#9ece6a' },
+          GitChange = { color = '#7dcfff' },
+          GitDelete = { color = '#f7768e' },
         },
       }
     end,
