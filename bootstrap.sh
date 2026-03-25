@@ -1,26 +1,23 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-# Make all the scripts executable
-chmod +x scripts/*.sh
+run_step() {
+  local script="$1"
+  "./scripts/$script"
+  echo
+}
 
-./scripts/set_macos_defaults.sh
-echo ""
-./scripts/install_homebrew.sh
-echo ""
-./scripts/install_ohmyzsh.sh
-echo ""
-./scripts/authenticate_git.sh
-echo ""
-./scripts/setup_dotfiles.sh
-echo ""
+run_step set_macos_defaults.sh
+run_step install_homebrew.sh
+run_step install_ohmyzsh.sh
+run_step authenticate_git.sh
+run_step setup_dotfiles.sh
 
 echo ""
 echo "--------------------------------"
 echo "Installing brew packages..."
 echo "--------------------------------"
 echo ""
-# install brew packages
 brew bundle install
 
 echo "Bootstrap setup complete!"

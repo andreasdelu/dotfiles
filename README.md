@@ -1,6 +1,8 @@
 # My dotfiles and macOS config
 
-## Installation:
+This repo is primarily set up for macOS. `bootstrap.sh` walks through system defaults, package/tool installation, GitHub auth, and symlinking the files in `config/` onto the expected paths on your machine.
+
+## Installation
 
 **Clone this repository**
 
@@ -9,16 +11,18 @@ git clone https://github.com/andreasdelu/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 ```
 
-**Make the `bootstrap.sh` script executable**
-
-```shell
-sudo chmod +x ./bootstrap.sh
-```
-
 **Run the `bootstrap.sh` script**
 
 ```shell
 ./bootstrap.sh
 ```
 
-**Enjoy not having to set everything up yourself 🎉**
+## Symlinks
+
+The mapping in [maps.txt](/Users/andreasdeleuran/.dotfiles/maps.txt) drives the symlink setup. `scripts/setup_dotfiles.sh` links files from `config/` into your home directory and backs up existing files into a timestamped `.backup_*` folder in the repo before replacing them.
+
+## Notes
+
+- `bootstrap.sh` is interactive. Each major step can be skipped individually.
+- The repo keeps `config/.zshrc` as the symlinked shell entrypoint.
+- Neovim logs like `.nvimlog` are ignored and should not be tracked.

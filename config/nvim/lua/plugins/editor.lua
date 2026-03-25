@@ -134,7 +134,7 @@ return {
         { '<leader>s', group = 'Search' },
         { '<leader>g', group = 'Git' },
         { '<leader>t', group = 'Test / Toggle' },
-        { '<leader>c', group = 'Claude / Copy' },
+        { '<leader>c', group = 'Copy' },
         { '<leader>h', group = 'Git Hunk', mode = { 'n', 'v' } },
       },
     },
@@ -213,12 +213,12 @@ return {
         use_icons = vim.g.have_nerd_font,
         content = {
           active = function()
-            local mode, mode_hl = statusline.section_mode({ trunc_width = 120 })
-            local lsp = statusline.section_lsp({ trunc_width = 75 })
-            local filename = statusline.section_filename({ trunc_width = 140 })
-            local fileinfo = statusline.section_fileinfo({ trunc_width = 120 })
-            local location = statusline.section_location({ trunc_width = 75 })
-            local search = statusline.section_searchcount({ trunc_width = 75 })
+            local mode, mode_hl = statusline.section_mode { trunc_width = 120 }
+            local lsp = statusline.section_lsp { trunc_width = 75 }
+            local filename = statusline.section_filename { trunc_width = 140 }
+            local fileinfo = statusline.section_fileinfo { trunc_width = 120 }
+            local location = statusline.section_location { trunc_width = 75 }
+            local search = statusline.section_searchcount { trunc_width = 75 }
             local groups = {
               { hl = mode_hl, strings = { mode } },
               { hl = 'MiniStatuslineModified', strings = vim.bo.modified and { '*' } or {} },
@@ -340,5 +340,57 @@ return {
         end
       end, { desc = 'Peek folded lines or hover' })
     end,
+  },
+  {
+    'petertriho/nvim-scrollbar',
+    event = 'VeryLazy',
+    opts = {
+      show = true,
+      show_in_active_only = false,
+      hide_if_all_visible = false,
+      excluded_buftypes = { 'terminal', 'prompt', 'nofile' },
+      excluded_filetypes = { 'neo-tree', 'neo-tree-popup', 'TelescopePrompt' },
+      handlers = {
+        cursor = false,
+        diagnostic = true,
+        gitsigns = true,
+        handle = true,
+        search = false,
+      },
+      marks = {
+        Search = { color = '#7aa2f7' },
+        Error = { color = '#f7768e' },
+        Warn = { color = '#e0af68' },
+        Info = { color = '#7dcfff' },
+        Hint = { color = '#9ece6a' },
+        Misc = { color = '#bb9af7' },
+        GitAdd = { color = '#9ece6a' },
+        GitChange = { color = '#7dcfff' },
+        GitDelete = { color = '#f7768e' },
+      },
+    },
+  },
+  {
+    'karb94/neoscroll.nvim',
+    event = 'VeryLazy',
+    opts = {
+      ignored_events = { 'CursorMoved' },
+      post_hook = function()
+        require('scrollbar').render()
+      end,
+    },
+  },
+  {
+    'sphamba/smear-cursor.nvim',
+    event = 'VeryLazy',
+    opts = {
+      stiffness = 0.8,
+      trailing_stiffness = 0.6,
+      stiffness_insert_mode = 0.7,
+      trailing_stiffness_insert_mode = 0.7,
+      damping = 0.95,
+      damping_insert_mode = 0.95,
+      distance_stop_animating = 0.5,
+    },
   },
 }

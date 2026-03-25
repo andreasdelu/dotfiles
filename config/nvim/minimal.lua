@@ -1,3 +1,4 @@
+-- Minimal Neovim setup used for git/editor flows via ~/.gitconfig.
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.signcolumn = 'yes'

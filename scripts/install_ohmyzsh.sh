@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-confirm() {
-  local prompt="${1:-Proceed?} [y/N] "
-  read -n 1 -r -p "$prompt" reply
-  echo
-  [[ "$reply" =~ ^[Yy]$ ]]
-}
+. "$(dirname "$0")/common.sh"
 
 install_ohmyzsh() {
   if [ ! -d "$HOME/.oh-my-zsh" ]; then
