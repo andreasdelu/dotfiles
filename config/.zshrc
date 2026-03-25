@@ -30,6 +30,7 @@ echo -e "\033[1;32mUnix Epoch:\033[0m \033[1;37m$(date +%s)\033[0m"; \
 echo -e "\033[1;32mUTC/Zulu  :\033[0m \033[34m$(date -u "+%H:%M:%S UTC")\033[0m"; \
 echo -e "\033[1;32mFilename  :\033[0m \033[90m$(date "+%Y%m%d%H%M%S")\033[0m"; \
 echo -e "\033[1;35m----------------------------\033[0m\n"'
+alias pax='~/Documents/pax/bin/pax --cwd "$PWD"'
 
 # Functions
 gfixup() {
