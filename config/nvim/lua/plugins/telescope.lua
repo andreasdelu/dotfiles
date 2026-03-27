@@ -283,73 +283,23 @@ local function branch_changes()
 end
 
 return {
-  {
-    'christoomey/vim-tmux-navigator',
-    lazy = false,
+  'nvim-telescope/telescope.nvim',
+  event = 'VimEnter',
+  dependencies = {
+    'nvim-lua/plenary.nvim',
+    {
+      'nvim-telescope/telescope-fzf-native.nvim',
+      build = 'make',
+      cond = function()
+        return vim.fn.executable 'make' == 1
+      end,
+    },
+    'nvim-telescope/telescope-ui-select.nvim',
+    { 'nvim-tree/nvim-web-devicons', enabled = true },
   },
-  {
-    'nvim-telescope/telescope.nvim',
-    event = 'VimEnter',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      {
-        'nvim-telescope/telescope-fzf-native.nvim',
-        build = 'make',
-        cond = function()
-          return vim.fn.executable 'make' == 1
-        end,
-      },
-      'nvim-telescope/telescope-ui-select.nvim',
-      { 'nvim-tree/nvim-web-devicons', enabled = true },
-    },
-    config = telescope_config,
-    keys = {
-      { '<leader>gw', worktree_changes, desc = 'Git worktree changes' },
-      { '<leader>gb', branch_changes, desc = 'Git branch changes' },
-    },
-  },
-  {
-    'nvim-neo-tree/neo-tree.nvim',
-    branch = 'v3.x',
-    lazy = false,
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'nvim-tree/nvim-web-devicons',
-      'MunifTanjim/nui.nvim',
-      's1n7ax/nvim-window-picker',
-    },
-    opts = {
-      window = { position = 'left', width = 30 },
-      filesystem = {
-        follow_current_file = { enabled = true },
-        hijack_netrw_behavior = 'disabled',
-        filtered_items = { visible = true },
-      },
-      default_component_configs = {
-        git_status = { symbols = {} },
-      },
-    },
-  },
-  {
-    's1n7ax/nvim-window-picker',
-    version = '2.*',
-    opts = {
-      filter_rules = {
-        include_current_win = false,
-        autoselect_one = true,
-        bo = {
-          filetype = { 'neo-tree', 'neo-tree-popup', 'notify' },
-          buftype = { 'terminal', 'quickfix' },
-        },
-      },
-    },
-  },
-  {
-    'antosha417/nvim-lsp-file-operations',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'nvim-neo-tree/neo-tree.nvim',
-    },
-    opts = {},
+  config = telescope_config,
+  keys = {
+    { '<leader>gw', worktree_changes, desc = 'Git worktree changes' },
+    { '<leader>gb', branch_changes, desc = 'Git branch changes' },
   },
 }

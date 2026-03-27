@@ -13,5 +13,12 @@ return {
       neo_tree = true,
       ['neo-tree'] = true,
     },
+    condition = function()
+      local filename = vim.fn.expand '%:t'
+      if filename:match '^%.env' then
+        return false
+      end
+      return true
+    end,
   },
 }

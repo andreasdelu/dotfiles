@@ -23,3 +23,6 @@ map('n', '<leader>cl', function()
   vim.fn.setreg('+', location)
   vim.notify('Copied ' .. location, vim.log.levels.INFO)
 end, { desc = 'Copy file location' })
+
+map('n', '<leader>rW', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = 'Replace word (Exact)' })
+map('n', '<leader>rw', [[:%s/<C-r><C-w>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = 'Replace word' })
