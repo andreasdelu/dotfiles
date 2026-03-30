@@ -5,6 +5,7 @@ cask "arc"
 cask "raycast"
 cask "karabiner-elements"
 cask "orbstack"
+cask "tailscale"
 
 # Formulae
 brew "node"
