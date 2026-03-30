@@ -72,6 +72,11 @@ return {
         map('gW', telescope.lsp_dynamic_workspace_symbols, 'Workspace symbols')
         map('grt', telescope.lsp_type_definitions, 'Type definition')
 
+        map('<leader>li', function()
+          vim.lsp.buf.execute_command { command = 'rubyLsp.reindex' }
+          vim.notify('Ruby LSP: Reindexing...', vim.log.levels.INFO)
+        end, 'Reindex Ruby LSP')
+
         if client and client.name == 'eslint' then
           map('<leader>lf', '<cmd>LspEslintFixAll<CR>', 'Eslint fix all')
           vim.api.nvim_create_autocmd('BufWritePre', {
