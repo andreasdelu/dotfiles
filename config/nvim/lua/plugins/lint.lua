@@ -2,6 +2,12 @@ local function ruby_root(bufnr)
   return vim.fs.root(bufnr or 0, { 'Gemfile', '.git' }) or vim.fn.getcwd()
 end
 
+local function is_ruby_file(bufnr)
+  bufnr = bufnr or 0
+  local name = vim.api.nvim_buf_get_name(bufnr)
+  return vim.bo[bufnr].filetype == 'ruby' and name:match '%.rb$' ~= nil
+end
+
 return {
   'mfussenegger/nvim-lint',
   event = { 'BufReadPre', 'BufNewFile' },
@@ -17,8 +23,13 @@ return {
       return 'rubocop'
     end
 
-    local function lint_ruby()
-      lint.try_lint('rubocop', { cwd = ruby_root(0) })
+    local function lint_ruby(bufnr)
+      bufnr = bufnr or 0
+      if not is_ruby_file(bufnr) then
+        return
+      end
+
+      lint.try_lint('rubocop', { cwd = ruby_root(bufnr) })
     end
 
     if lint.linters.rubocop then
@@ -31,16 +42,16 @@ return {
 
     vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWritePost', 'InsertLeave' }, {
       group = vim.api.nvim_create_augroup('config-ruby-lint', { clear = true }),
-      callback = function()
-        if vim.bo.modifiable and vim.bo.filetype == 'ruby' then
-          lint_ruby()
+      callback = function(args)
+        if vim.bo[args.buf].modifiable then
+          lint_ruby(args.buf)
         end
       end,
     })
 
     vim.keymap.set('n', '<leader>l', function()
-      if vim.bo.filetype == 'ruby' then
-        lint_ruby()
+      if is_ruby_file(0) then
+        lint_ruby(0)
       else
         lint.try_lint()
       end

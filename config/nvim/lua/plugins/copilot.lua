@@ -1,6 +1,6 @@
 return {
   'github/copilot.vim',
-  event = 'InsertEnter',
+  event = 'VimEnter',
   cmd = { 'Copilot' },
   init = function()
     vim.g.copilot_no_tab_map = true
@@ -21,9 +21,13 @@ return {
       end,
     })
 
-    vim.keymap.set('i', '<C-l>', '<Plug>(copilot-accept-word)')
-    vim.keymap.set('i', '<C-]>', '<Plug>(copilot-dismiss)')
-    vim.keymap.set('i', '<M-]>', '<Plug>(copilot-next)')
-    vim.keymap.set('i', '<M-[>', '<Plug>(copilot-previous)')
+    vim.keymap.set('i', '<C-l>', 'copilot#Accept("")', {
+      expr = true,
+      replace_keycodes = false,
+    })
+    vim.keymap.set('i', '<C-j>', '<Plug>(copilot-accept-word)', { remap = true })
+    vim.keymap.set('i', '<C-]>', '<Plug>(copilot-dismiss)', { remap = true })
+    vim.keymap.set('i', '<M-]>', '<Plug>(copilot-next)', { remap = true })
+    vim.keymap.set('i', '<M-[>', '<Plug>(copilot-previous)', { remap = true })
   end,
 }

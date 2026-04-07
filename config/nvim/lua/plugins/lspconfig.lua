@@ -41,6 +41,44 @@ local function sorbet_publish_diagnostics(err, result, ctx, config)
   return vim.lsp.handlers['textDocument/publishDiagnostics'](err, result, ctx, config)
 end
 
+local function ruby_project_root(bufnr)
+  return vim.fs.root(bufnr, { 'Gemfile', '.ruby-version' })
+end
+
+local function sorbet_project_root(bufnr)
+  local root = ruby_project_root(bufnr)
+  if root and vim.uv.fs_stat(root .. '/sorbet/config') then
+    return root
+  end
+end
+
+local function is_landfolk_api_root(root)
+  return type(root) == 'string' and root:match '/Documents/landfolk/apps/api$' ~= nil
+end
+
+local function start_in_nix_dev_shell(dispatchers, config, command)
+  return vim.lsp.rpc.start(command, dispatchers, {
+    cwd = config.root_dir,
+  })
+end
+
+local function start_sorbet(dispatchers, config)
+  if is_landfolk_api_root(config.root_dir) then
+    return start_in_nix_dev_shell(dispatchers, config, { 'nix', 'develop', '../..#api', '-c', './bin/srb', 'tc', '--lsp', '--disable-watchman' })
+  end
+
+  return vim.lsp.rpc.start({ 'srb', 'tc', '--lsp', '--disable-watchman' }, dispatchers, {
+    cwd = config.root_dir,
+  })
+end
+
+local function sorbet_root_dir(bufnr, on_dir)
+  local root = sorbet_project_root(bufnr)
+  if root then
+    on_dir(root)
+  end
+end
+
 return {
   'neovim/nvim-lspconfig',
   dependencies = {
@@ -71,11 +109,6 @@ return {
         map('gO', telescope.lsp_document_symbols, 'Document symbols')
         map('gW', telescope.lsp_dynamic_workspace_symbols, 'Workspace symbols')
         map('grt', telescope.lsp_type_definitions, 'Type definition')
-
-        map('<leader>li', function()
-          vim.lsp.buf.execute_command { command = 'rubyLsp.reindex' }
-          vim.notify('Ruby LSP: Reindexing...', vim.log.levels.INFO)
-        end, 'Reindex Ruby LSP')
 
         if client and client.name == 'eslint' then
           map('<leader>lf', '<cmd>LspEslintFixAll<CR>', 'Eslint fix all')
@@ -159,15 +192,10 @@ return {
           workingDirectory = { mode = 'auto' },
         },
       },
-      ruby_lsp = {
-        filetypes = { 'ruby', 'eruby' },
-        init_options = {
-          formatter = 'syntax_tree',
-        },
-      },
       sorbet = {
-        cmd = { 'srb', 'tc', '--lsp', '--disable-watchman' },
-        filetypes = { 'ruby', 'eruby' },
+        cmd = start_sorbet,
+        filetypes = { 'ruby' },
+        root_dir = sorbet_root_dir,
         handlers = {
           ['textDocument/publishDiagnostics'] = sorbet_publish_diagnostics,
         },
@@ -189,7 +217,6 @@ return {
           server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
           server.mason = nil
           vim.lsp.config(server_name, server)
-          vim.lsp.enable(server_name)
         end,
       },
     }
@@ -199,8 +226,20 @@ return {
         server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
         server.mason = nil
         vim.lsp.config(server_name, server)
-        vim.lsp.enable(server_name)
       end
+    end
+
+    vim.lsp.config('sorbet', {
+      cmd = start_sorbet,
+      filetypes = { 'ruby' },
+      root_dir = sorbet_root_dir,
+      handlers = {
+        ['textDocument/publishDiagnostics'] = sorbet_publish_diagnostics,
+      },
+    })
+
+    for _, server_name in ipairs(vim.tbl_keys(servers)) do
+      vim.lsp.enable(server_name)
     end
 
     -- Tailwind: add tx tagged template support (must be after lspconfig defaults load)

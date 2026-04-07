@@ -1,3 +1,17 @@
+local function is_ruby_file(bufnr)
+  bufnr = bufnr or 0
+  local name = vim.api.nvim_buf_get_name(bufnr)
+  return vim.bo[bufnr].filetype == 'ruby' and name:match '%.rb$' ~= nil
+end
+
+local function ruby_root(bufnr)
+  return vim.fs.root(bufnr or 0, { 'Gemfile', '.git' })
+end
+
+local function is_landfolk_api_root(root)
+  return type(root) == 'string' and root:match '/Documents/landfolk/apps/api$' ~= nil
+end
+
 return {
   'stevearc/conform.nvim',
   event = 'BufWritePre',
@@ -10,6 +24,11 @@ return {
         local has_eslint = #vim.lsp.get_clients { bufnr = bufnr, name = 'eslint' } > 0
         if has_eslint then
           pcall(vim.cmd, 'LspEslintFixAll')
+        end
+
+        if is_ruby_file(bufnr) then
+          require('conform').format { async = false, lsp_format = 'never', formatters = { 'syntax_tree' } }
+          return
         end
 
         require('conform').format { async = false, lsp_format = 'never' }
@@ -39,18 +58,37 @@ return {
         return nil
       end
 
+      if vim.bo[bufnr].filetype == 'ruby' and not is_ruby_file(bufnr) then
+        return nil
+      end
+
       return {
         timeout_ms = 1000,
         lsp_format = 'never',
       }
     end,
     formatters = {
-      syntax_tree = {
-        command = 'bin/stree',
-        cwd = function(self, ctx)
-          return require('conform.util').root_file { 'Gemfile', '.git' }(self, ctx)
-        end,
-      },
+      syntax_tree = function(bufnr)
+        local root = ruby_root(bufnr)
+
+        if is_landfolk_api_root(root) then
+          return {
+            inherit = false,
+            command = 'nix',
+            stdin = false,
+            cwd = root,
+            args = { 'develop', '../..#api', '-c', './bin/stree', 'write', '$FILENAME' },
+          }
+        end
+
+        return {
+          inherit = false,
+          command = 'bin/stree',
+          stdin = false,
+          args = { 'write', '$FILENAME' },
+          cwd = root,
+        }
+      end,
     },
     formatters_by_ft = {
       lua = { 'stylua' },
