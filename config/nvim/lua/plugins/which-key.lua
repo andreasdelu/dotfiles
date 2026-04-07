@@ -39,6 +39,7 @@ return {
     spec = {
       { '<leader>s', group = 'Search' },
       { '<leader>g', group = 'Git' },
+      { '<leader>m', group = 'Multicursor' },
       { '<leader>t', group = 'Test / Toggle' },
       { '<leader>c', group = 'Copy' },
       { '<leader>r', group = 'Replace' },
