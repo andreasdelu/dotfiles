@@ -41,6 +41,7 @@ return {
       { '<leader>g', group = 'Git' },
       { '<leader>m', group = 'Multicursor' },
       { '<leader>t', group = 'Test / Toggle' },
+      { '<leader>l', group = 'LSP' },
       { '<leader>c', group = 'Copy' },
       { '<leader>r', group = 'Replace' },
       { '<leader>h', group = 'Git Hunk', mode = { 'n', 'v' } },

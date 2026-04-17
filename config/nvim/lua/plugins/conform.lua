@@ -27,7 +27,12 @@ return {
         end
 
         if is_ruby_file(bufnr) then
-          require('conform').format { async = false, lsp_format = 'never', formatters = { 'syntax_tree' } }
+          require('conform').format {
+            async = false,
+            timeout_ms = 15000,
+            lsp_format = 'never',
+            formatters = { 'syntax_tree' },
+          }
           return
         end
 
@@ -63,7 +68,7 @@ return {
       end
 
       return {
-        timeout_ms = 1000,
+        timeout_ms = vim.bo[bufnr].filetype == 'ruby' and 15000 or 1000,
         lsp_format = 'never',
       }
     end,
@@ -74,10 +79,12 @@ return {
         if is_landfolk_api_root(root) then
           return {
             inherit = false,
-            command = 'nix',
+            command = 'direnv',
             stdin = false,
-            cwd = root,
-            args = { 'develop', '../..#api', '-c', './bin/stree', 'write', '$FILENAME' },
+            cwd = function()
+              return root
+            end,
+            args = { 'exec', '.', './bin/stree', 'write', '$FILENAME' },
           }
         end
 
@@ -86,7 +93,9 @@ return {
           command = 'bin/stree',
           stdin = false,
           args = { 'write', '$FILENAME' },
-          cwd = root,
+          cwd = function()
+            return root
+          end,
         }
       end,
     },

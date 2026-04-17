@@ -39,4 +39,7 @@ return {
     snippets = { preset = 'luasnip' },
     fuzzy = { implementation = 'lua' },
   },
+  config = function(_, opts)
+    require('blink.cmp').setup(opts)
+  end,
 }

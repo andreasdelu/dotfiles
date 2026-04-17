@@ -72,6 +72,103 @@ local function start_sorbet(dispatchers, config)
   })
 end
 
+local function lsp_client_names(clients)
+  local names = {}
+
+  for _, client in ipairs(clients) do
+    table.insert(names, client.name)
+  end
+
+  return names
+end
+
+local function stop_lsp(bufnr)
+  local clients = vim.lsp.get_clients { bufnr = bufnr }
+  if vim.tbl_isempty(clients) then
+    vim.notify('No LSP attached to this buffer', vim.log.levels.WARN)
+    return false, {}
+  end
+
+  local client_ids = {}
+  local client_names = lsp_client_names(clients)
+
+  for _, client in ipairs(clients) do
+    table.insert(client_ids, client.id)
+    client:stop(true)
+  end
+
+  vim.wait(1000, function()
+    for _, client_id in ipairs(client_ids) do
+      local client = vim.lsp.get_client_by_id(client_id)
+      if client ~= nil and not vim.lsp.client_is_stopped(client_id) then
+        return false
+      end
+    end
+
+    return true
+  end, 50)
+
+  return true, client_names
+end
+
+local function start_lsp(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  if not vim.bo[bufnr].modifiable and vim.bo[bufnr].buftype ~= '' then
+    vim.notify('Cannot start LSP for this buffer type', vim.log.levels.WARN)
+    return
+  end
+
+  vim.api.nvim_buf_call(bufnr, function()
+    vim.cmd.edit()
+  end)
+
+  vim.defer_fn(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+
+    local clients = vim.lsp.get_clients { bufnr = bufnr }
+    if vim.tbl_isempty(clients) then
+      vim.notify('No LSP configured for this buffer', vim.log.levels.WARN)
+      return
+    end
+
+    vim.notify('Started LSP: ' .. table.concat(lsp_client_names(clients), ', '), vim.log.levels.INFO)
+  end, 150)
+end
+
+local function restart_lsp(bufnr)
+  local ok, client_names = stop_lsp(bufnr)
+  if not ok then
+    return
+  end
+
+  if vim.api.nvim_buf_is_valid(bufnr) then
+    vim.api.nvim_buf_call(bufnr, function()
+      vim.cmd.edit()
+    end)
+    vim.notify('Restarted LSP: ' .. table.concat(client_names, ', '), vim.log.levels.INFO)
+  end
+end
+
+local function lsp_info(bufnr)
+  local clients = vim.lsp.get_clients { bufnr = bufnr }
+  if vim.tbl_isempty(clients) then
+    vim.notify('No LSP attached to this buffer', vim.log.levels.INFO)
+    return
+  end
+
+  local details = vim.tbl_map(function(client)
+    local root = client.config and client.config.root_dir or 'unknown root'
+    return string.format('%s (%s)', client.name, root)
+  end, clients)
+
+  vim.notify('LSP: ' .. table.concat(details, ' | '), vim.log.levels.INFO)
+end
+
 local function sorbet_root_dir(bufnr, on_dir)
   local root = sorbet_project_root(bufnr)
   if root then
@@ -109,6 +206,21 @@ return {
         map('gO', telescope.lsp_document_symbols, 'Document symbols')
         map('gW', telescope.lsp_dynamic_workspace_symbols, 'Workspace symbols')
         map('grt', telescope.lsp_type_definitions, 'Type definition')
+        map('<leader>li', function()
+          lsp_info(event.buf)
+        end, 'Info')
+        map('<leader>ls', function()
+          start_lsp(event.buf)
+        end, 'Start')
+        map('<leader>lx', function()
+          local ok, client_names = stop_lsp(event.buf)
+          if ok then
+            vim.notify('Stopped LSP: ' .. table.concat(client_names, ', '), vim.log.levels.INFO)
+          end
+        end, 'Stop')
+        map('<leader>lr', function()
+          restart_lsp(event.buf)
+        end, 'Restart')
 
         if client and client.name == 'eslint' then
           map('<leader>lf', '<cmd>LspEslintFixAll<CR>', 'Eslint fix all')
