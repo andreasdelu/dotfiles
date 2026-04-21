@@ -40,6 +40,7 @@ return {
       { '<leader>s', group = 'Search' },
       { '<leader>g', group = 'Git' },
       { '<leader>m', group = 'Multicursor' },
+      { '<leader>a', group = 'Agent edits' },
       { '<leader>t', group = 'Test / Toggle' },
       { '<leader>l', group = 'LSP' },
       { '<leader>c', group = 'Copy' },

@@ -30,6 +30,16 @@ map('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 map('n', '<leader>e', '<cmd>Neotree toggle filesystem left<CR>', { desc = 'Toggle explorer', silent = true })
 map('n', '<leader>o', '<cmd>Neotree reveal left<CR>', { desc = 'Reveal current file', silent = true })
 
+map('n', '<leader>ai', '<cmd>AgentEditsImportClipboard<CR>', { desc = 'Agent edits import clipboard', silent = true })
+map('n', '<leader>aI', '<cmd>AgentEditsImportBuffer<CR>', { desc = 'Agent edits import buffer', silent = true })
+map('n', '<leader>al', '<cmd>AgentEditsLoadLatest<CR>', { desc = 'Agent edits load latest', silent = true })
+map('n', '<leader>ap', '<cmd>AgentEditsPreview<CR>', { desc = 'Agent edits preview', silent = true })
+map('n', '<leader>an', '<cmd>AgentEditsNext<CR>', { desc = 'Agent edits next', silent = true })
+map('n', '<leader>aN', '<cmd>AgentEditsPrev<CR>', { desc = 'Agent edits previous', silent = true })
+map('n', '<leader>aa', '<cmd>AgentEditsAccept<CR>', { desc = 'Agent edits accept', silent = true })
+map('n', '<leader>ar', '<cmd>AgentEditsReject<CR>', { desc = 'Agent edits reject', silent = true })
+map('n', '<leader>as', '<cmd>AgentEditsStatus<CR>', { desc = 'Agent edits status', silent = true })
+
 map('n', '<leader>cl', function()
   local path = vim.fn.expand '%:p'
   if path == '' then
