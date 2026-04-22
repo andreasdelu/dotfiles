@@ -51,14 +51,18 @@ return {
         end
 
         if filename:match '^%.env' then
-          codeium.disable()
+          if codeium.s and codeium.s.enabled then
+            codeium.disable()
+          end
           pcall(function()
             require('codeium.virtual_text').clear()
           end)
           return
         end
 
-        codeium.enable()
+        if codeium.s and not codeium.s.enabled then
+          codeium.enable()
+        end
       end,
     })
   end,
