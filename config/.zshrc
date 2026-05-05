@@ -31,6 +31,7 @@ echo -e "\033[1;32mUTC/Zulu  :\033[0m \033[34m$(date -u "+%H:%M:%S UTC")\033[0m"
 echo -e "\033[1;32mFilename  :\033[0m \033[90m$(date "+%Y%m%d%H%M%S")\033[0m"; \
 echo -e "\033[1;35m----------------------------\033[0m\n"'
 alias pax='~/Documents/pax/bin/pax --cwd "$PWD"'
+alias pip='~/pip/bin/pip'
 
 # Functions
 gfixup() {
@@ -69,5 +70,5 @@ export PNPM_HOME="$HOME/Library/pnpm"
 path_prepend_if_missing "$HOME/.local/bin"
 path_prepend_if_missing "$PNPM_HOME"
 path_prepend_if_missing "/opt/homebrew/opt/postgresql@17/bin"
-path_prepend_if_missing "$HOME/.bun/bin"
+path_prepend_if_missing "/opt/homebrew/bin/bun"
 path_prepend_if_missing "$HOME/bin"
