@@ -9,7 +9,21 @@ local function ruby_root(bufnr)
 end
 
 local function is_landfolk_api_root(root)
-  return type(root) == 'string' and root:match '/Documents/landfolk/apps/api$' ~= nil
+  if type(root) ~= 'string' then
+    return false
+  end
+
+  return root:match '/Documents/landfolk/apps/api$' ~= nil
+    or root:match '/Documents/lf%-worktrees/[^/]+/apps/api$' ~= nil
+    or root:match '/Documents/landfolk%-worktrees/[^/]+/apps/api$' ~= nil
+end
+
+local function ruby_formatters(bufnr)
+  if is_landfolk_api_root(ruby_root(bufnr)) then
+    return { 'landfolk_api_ruby' }
+  end
+
+  return { 'syntax_tree' }
 end
 
 return {
@@ -29,9 +43,9 @@ return {
         if is_ruby_file(bufnr) then
           require('conform').format {
             async = false,
-            timeout_ms = 15000,
+            timeout_ms = 30000,
             lsp_format = 'never',
-            formatters = { 'syntax_tree' },
+            formatters = ruby_formatters(bufnr),
           }
           return
         end
@@ -68,25 +82,48 @@ return {
       end
 
       return {
-        timeout_ms = vim.bo[bufnr].filetype == 'ruby' and 15000 or 1000,
+        timeout_ms = vim.bo[bufnr].filetype == 'ruby' and 30000 or 1000,
         lsp_format = 'never',
       }
     end,
     formatters = {
-      syntax_tree = function(bufnr)
+      landfolk_api_ruby = function(bufnr)
         local root = ruby_root(bufnr)
 
-        if is_landfolk_api_root(root) then
-          return {
-            inherit = false,
-            command = 'direnv',
-            stdin = false,
-            cwd = function()
-              return root
-            end,
-            args = { 'exec', '.', './bin/stree', 'write', '$FILENAME' },
-          }
-        end
+        return {
+          inherit = false,
+          command = 'nix',
+          stdin = false,
+          tmpfile_format = '.conform.$RANDOM/$FILENAME',
+          cwd = function()
+            return root
+          end,
+          args = function(_, ctx)
+            return {
+              'develop',
+              '../..#api',
+              '-c',
+              'bash',
+              '-c',
+              table.concat({
+                'tmp="$(mktemp)"',
+                './bin/stree write "$1" >/dev/null 2>&1 || true',
+                'status=0',
+                './bin/rubocop --force-exclusion --autocorrect-all -f quiet --stderr --stdin "$2" < "$1" > "$tmp" || status=$?',
+                'if { [ "$status" -eq 0 ] || [ "$status" -eq 1 ]; } && [ -s "$tmp" ]; then cat "$tmp" > "$1"; fi',
+                'rm -f "$tmp"',
+                'exit "$status"',
+              }, '; '),
+              'landfolk-api-ruby-format',
+              '$FILENAME',
+              vim.api.nvim_buf_get_name(ctx.buf),
+            }
+          end,
+          exit_codes = { 0, 1 },
+        }
+      end,
+      syntax_tree = function(bufnr)
+        local root = ruby_root(bufnr)
 
         return {
           inherit = false,
@@ -105,7 +142,7 @@ return {
       javascriptreact = { 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
       typescript = { 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
       typescriptreact = { 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
-      ruby = { 'syntax_tree' },
+      ruby = ruby_formatters,
       json = { 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
       jsonc = { 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
       css = { 'biome-check', 'prettierd', 'prettier', stop_after_first = true },

@@ -32,6 +32,7 @@ echo -e "\033[1;32mFilename  :\033[0m \033[90m$(date "+%Y%m%d%H%M%S")\033[0m"; \
 echo -e "\033[1;35m----------------------------\033[0m\n"'
 alias pax='~/Documents/pax/bin/pax --cwd "$PWD"'
 alias pip='~/pip/bin/pip'
+alias twm='TWM_OVERWATCH_ENABLE=true ~/.tmux/plugins/tmux-worktree-manager/dist/twm'
 
 # Functions
 gfixup() {

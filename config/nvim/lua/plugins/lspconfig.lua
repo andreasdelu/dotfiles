@@ -53,7 +53,13 @@ local function sorbet_project_root(bufnr)
 end
 
 local function is_landfolk_api_root(root)
-  return type(root) == 'string' and root:match '/Documents/landfolk/apps/api$' ~= nil
+  if type(root) ~= 'string' then
+    return false
+  end
+
+  return root:match '/Documents/landfolk/apps/api$' ~= nil
+    or root:match '/Documents/lf%-worktrees/[^/]+/apps/api$' ~= nil
+    or root:match '/Documents/landfolk%-worktrees/[^/]+/apps/api$' ~= nil
 end
 
 local function start_in_nix_dev_shell(dispatchers, config, command)

@@ -2,6 +2,16 @@ local function ruby_root(bufnr)
   return vim.fs.root(bufnr or 0, { 'Gemfile', '.git' }) or vim.fn.getcwd()
 end
 
+local function is_landfolk_api_root(root)
+  if type(root) ~= 'string' then
+    return false
+  end
+
+  return root:match '/Documents/landfolk/apps/api$' ~= nil
+    or root:match '/Documents/lf%-worktrees/[^/]+/apps/api$' ~= nil
+    or root:match '/Documents/landfolk%-worktrees/[^/]+/apps/api$' ~= nil
+end
+
 local function is_ruby_file(bufnr)
   bufnr = bufnr or 0
   local name = vim.api.nvim_buf_get_name(bufnr)
@@ -29,11 +39,30 @@ return {
         return
       end
 
-      lint.try_lint('rubocop', { cwd = ruby_root(bufnr) })
+      local root = ruby_root(bufnr)
+      local linter = is_landfolk_api_root(root) and 'landfolk_api_rubocop' or 'rubocop'
+      lint.try_lint(linter, { cwd = root })
     end
 
     if lint.linters.rubocop then
       lint.linters.rubocop.cmd = rubocop_cmd
+      lint.linters.landfolk_api_rubocop = vim.tbl_deep_extend('force', {}, lint.linters.rubocop, {
+        cmd = 'nix',
+        args = {
+          'develop',
+          '../..#api',
+          '-c',
+          './bin/rubocop',
+          '--format',
+          'json',
+          '--force-exclusion',
+          '--server',
+          '--stdin',
+          function()
+            return vim.api.nvim_buf_get_name(0)
+          end,
+        },
+      })
     end
 
     lint.linters_by_ft = {
