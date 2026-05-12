@@ -14,7 +14,8 @@ source "$ZSH/oh-my-zsh.sh"
 
 # Aliases
 alias zshconfig='nvim ~/.zshrc'
-alias gtmp='git checkout -b TEMP-$(git rev-parse --abbrev-ref HEAD)'
+alias gwip='git add -A; git rm $(git ls-files --deleted) 2> /dev/null; git commit --no-verify --no-gpg-sign --message "--wip-- [skip ci]"'
+alias gunwip='git rev-list --max-count=1 --format="%s" HEAD | grep -q "\--wip--" && git reset HEAD~1'
 alias gclean='git reset --soft $(git merge-base HEAD main)'
 alias md='make dev'
 alias mt='make types'
