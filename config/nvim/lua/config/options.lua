@@ -23,6 +23,16 @@ vim.opt.shiftwidth = 4
 vim.opt.softtabstop = 4
 vim.opt.expandtab = true
 
+vim.opt.sessionoptions = {
+  'blank',
+  'buffers',
+  'curdir',
+  'folds',
+  'help',
+  'tabpages',
+  'winsize',
+}
+
 vim.schedule(function()
   vim.opt.clipboard = 'unnamedplus'
 end)

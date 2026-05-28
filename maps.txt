@@ -1,5 +1,6 @@
 .ghostty=~/Library/Application Support/com.mitchellh.ghostty/config
 .gitconfig=~/.gitconfig
+.gitignore_global=~/.gitignore_global
 .zshrc=~/.zshrc
 nvim=~/.config/nvim
 karabiner.json=~/.config/karabiner/karabiner.json

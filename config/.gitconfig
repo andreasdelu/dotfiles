@@ -3,5 +3,6 @@
 	email = andreasdelu@gmail.com
 [core]
 	editor = "nvim -u ~/.config/nvim/minimal.lua"
+	excludesfile = ~/.gitignore_global
 [pull]
 	rebase = true
