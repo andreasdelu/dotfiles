@@ -6,3 +6,4 @@ nvim=~/.config/nvim
 karabiner.json=~/.config/karabiner/karabiner.json
 .tmux.conf=~/.tmux.conf
 .tmux=~/.tmux
+linearmouse.json=~/.config/linearmouse/linearmouse.json
