@@ -5,7 +5,7 @@ cask "arc"
 cask "raycast"
 cask "karabiner-elements"
 cask "orbstack"
-cask "tailscale"
+cask "tailscale-app"
 cask "linearmouse"
 
 # Formulae
