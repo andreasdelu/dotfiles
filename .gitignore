@@ -6,3 +6,4 @@
 .env
 **/.nvimlog
 .nvimlog
+config/.tmux/plugins/*
