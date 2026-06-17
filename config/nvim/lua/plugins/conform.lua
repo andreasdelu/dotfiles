@@ -20,7 +20,7 @@ end
 
 local function ruby_formatters(bufnr)
   if is_landfolk_api_root(ruby_root(bufnr)) then
-    return { 'landfolk_api_ruby' }
+    return { 'landfolk_api_stree' }
   end
 
   return { 'syntax_tree' }
@@ -65,12 +65,12 @@ return {
         javascriptreact = true,
         typescript = true,
         typescriptreact = true,
-        ruby = true,
         json = true,
         jsonc = true,
         css = true,
         scss = true,
         markdown = true,
+        ruby = true,
       }
 
       if not format_on_save_filetypes[vim.bo[bufnr].filetype] then
@@ -82,44 +82,22 @@ return {
       end
 
       return {
-        timeout_ms = vim.bo[bufnr].filetype == 'ruby' and 30000 or 1000,
+        timeout_ms = vim.bo[bufnr].filetype == 'ruby' and 5000 or 1000,
         lsp_format = 'never',
       }
     end,
     formatters = {
-      landfolk_api_ruby = function(bufnr)
+      landfolk_api_stree = function(bufnr)
         local root = ruby_root(bufnr)
 
         return {
           inherit = false,
-          command = 'nix',
+          command = './bin/stree',
           stdin = false,
-          tmpfile_format = '.conform.$RANDOM/$FILENAME',
+          args = { 'write', '$FILENAME' },
           cwd = function()
             return root
           end,
-          args = function(_, ctx)
-            return {
-              'develop',
-              '../..#api',
-              '-c',
-              'bash',
-              '-c',
-              table.concat({
-                'tmp="$(mktemp)"',
-                './bin/stree write "$1" >/dev/null 2>&1 || true',
-                'status=0',
-                './bin/rubocop --force-exclusion --autocorrect-all -f quiet --stderr --stdin "$2" < "$1" > "$tmp" || status=$?',
-                'if { [ "$status" -eq 0 ] || [ "$status" -eq 1 ]; } && [ -s "$tmp" ]; then cat "$tmp" > "$1"; fi',
-                'rm -f "$tmp"',
-                'exit "$status"',
-              }, '; '),
-              'landfolk-api-ruby-format',
-              '$FILENAME',
-              vim.api.nvim_buf_get_name(ctx.buf),
-            }
-          end,
-          exit_codes = { 0, 1 },
         }
       end,
       syntax_tree = function(bufnr)

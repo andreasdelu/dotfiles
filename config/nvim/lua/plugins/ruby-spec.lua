@@ -141,16 +141,9 @@ end
 local function rspec_command(target)
   local root = ruby_root(0)
   local local_rspec = root .. '/bin/rspec'
-  local command
+  local runner = vim.fn.executable(local_rspec) == 1 and './bin/rspec' or 'bundle exec rspec'
 
-  if vim.fn.executable 'nix' == 1 and file_exists(root .. '/shell.nix') and file_exists(root .. '/../../flake.nix') then
-    command = 'nix develop ../..#api -c ./bin/rspec ' .. vim.fn.shellescape(target)
-  else
-    local runner = vim.fn.executable(local_rspec) == 1 and './bin/rspec' or 'bundle exec rspec'
-    command = runner .. ' ' .. vim.fn.shellescape(target)
-  end
-
-  return command, root
+  return runner .. ' ' .. vim.fn.shellescape(target), root
 end
 
 local function run_in_terminal(command, cwd)
@@ -158,7 +151,7 @@ local function run_in_terminal(command, cwd)
   vim.cmd 'enew'
   vim.bo.bufhidden = 'wipe'
   vim.bo.swapfile = false
-  vim.fn.termopen({ vim.o.shell, '-lc', command }, { cwd = cwd })
+  vim.fn.termopen({ 'bash', '-c', command }, { cwd = cwd })
   vim.cmd 'startinsert'
 end
 
@@ -178,15 +171,35 @@ local function run_spec_file()
   run_in_terminal(command, cwd)
 end
 
-local function run_nearest_spec()
+local function spec_target_at_cursor()
   local spec = current_spec_path()
   if not spec then
+    return nil
+  end
+
+  return string.format('%s:%d', relative_to_root(spec, ruby_root(0)), vim.api.nvim_win_get_cursor(0)[1])
+end
+
+local function run_nearest_spec()
+  local target = spec_target_at_cursor()
+  if not target then
     return
   end
 
-  local target = string.format('%s:%d', relative_to_root(spec, ruby_root(0)), vim.api.nvim_win_get_cursor(0)[1])
   local command, cwd = rspec_command(target)
   run_in_terminal(command, cwd)
+end
+
+local function copy_nearest_spec_command()
+  local target = spec_target_at_cursor()
+  if not target then
+    return
+  end
+
+  local command = rspec_command(target)
+  vim.fn.setreg('+', command)
+  vim.fn.setreg('"', command)
+  vim.notify('Copied: ' .. command, vim.log.levels.INFO)
 end
 
 return {
@@ -196,6 +209,7 @@ return {
     vim.api.nvim_create_user_command('RubyOpenSpec', open_spec, {})
     vim.api.nvim_create_user_command('RubyRunSpecFile', run_spec_file, {})
     vim.api.nvim_create_user_command('RubyRunNearestSpec', run_nearest_spec, {})
+    vim.api.nvim_create_user_command('RubyCopySpecCommand', copy_nearest_spec_command, {})
 
     vim.api.nvim_create_autocmd('FileType', {
       group = vim.api.nvim_create_augroup('config-ruby-spec', { clear = true }),
@@ -205,6 +219,7 @@ return {
         vim.keymap.set('n', '<leader>to', open_spec, vim.tbl_extend('force', opts, { desc = 'Test open spec' }))
         vim.keymap.set('n', '<leader>tf', run_spec_file, vim.tbl_extend('force', opts, { desc = 'Test run spec file' }))
         vim.keymap.set('n', '<leader>tn', run_nearest_spec, vim.tbl_extend('force', opts, { desc = 'Test run nearest spec' }))
+        vim.keymap.set('n', '<leader>tc', copy_nearest_spec_command, vim.tbl_extend('force', opts, { desc = 'Test copy spec command' }))
       end,
     })
   end,
