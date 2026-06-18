@@ -6,3 +6,5 @@
 	excludesfile = ~/.gitignore_global
 [pull]
 	rebase = true
+[push]
+    autoSetupRemote = true
