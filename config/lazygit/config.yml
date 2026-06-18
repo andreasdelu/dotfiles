@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/jesseduffield/lazygit/master/schema/config.json
+
+git:
+  pagers:
+    - pager: 'delta --dark --syntax-theme "Visual Studio Dark+" --paging=never --line-numbers --hyperlinks --hyperlinks-file-link-format="lazygit-edit://{path}:{line}"'
+
+customCommands:
+  - key: 'æ'
+    context: 'global'
+    command: 'git add -A; git rm $(git ls-files --deleted) 2> /dev/null; git commit --no-verify --no-gpg-sign --message "--wip-- [skip ci]"'
+    description: '(gwip) Add all files and commit to a WIP commit'
+  - key: 'Æ'
+    context: 'global'
+    command: 'git rev-list --max-count=1 --format="%s" HEAD | grep -q "\--wip--"; git reset HEAD~1'
+    description: '(gunwip) Undo the last WIP commit'
