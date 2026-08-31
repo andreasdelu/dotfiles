@@ -8,3 +8,6 @@
 	rebase = true
 [push]
     autoSetupRemote = true
+	default = simple
+[branch]
+    autoSetupMerge = simple
