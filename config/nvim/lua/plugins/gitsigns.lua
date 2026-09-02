@@ -87,21 +87,21 @@ return {
           end
         end, 'Jump to previous git change')
 
-        map('v', '<leader>hs', function()
+        map('v', '<leader>ghs', function()
           gitsigns.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
         end, 'Git stage hunk')
-        map('v', '<leader>hr', function()
+        map('v', '<leader>ghr', function()
           gitsigns.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
         end, 'Git reset hunk')
-        map('n', '<leader>hs', gitsigns.stage_hunk, 'Git stage hunk')
-        map('n', '<leader>hr', gitsigns.reset_hunk, 'Git reset hunk')
-        map('n', '<leader>hS', gitsigns.stage_buffer, 'Git stage buffer')
-        map('n', '<leader>hu', gitsigns.undo_stage_hunk, 'Git undo stage hunk')
-        map('n', '<leader>hR', gitsigns.reset_buffer, 'Git reset buffer')
-        map('n', '<leader>hp', gitsigns.preview_hunk, 'Git preview hunk')
-        map('n', '<leader>hb', gitsigns.blame_line, 'Git blame line')
-        map('n', '<leader>hd', gitsigns.diffthis, 'Git diff against index')
-        map('n', '<leader>hD', function()
+        map('n', '<leader>ghs', gitsigns.stage_hunk, 'Git stage hunk')
+        map('n', '<leader>ghr', gitsigns.reset_hunk, 'Git reset hunk')
+        map('n', '<leader>ghS', gitsigns.stage_buffer, 'Git stage buffer')
+        map('n', '<leader>ghu', gitsigns.undo_stage_hunk, 'Git undo stage hunk')
+        map('n', '<leader>ghR', gitsigns.reset_buffer, 'Git reset buffer')
+        map('n', '<leader>ghp', gitsigns.preview_hunk, 'Git preview hunk')
+        map('n', '<leader>ghb', gitsigns.blame_line, 'Git blame line')
+        map('n', '<leader>ghd', gitsigns.diffthis, 'Git diff against index')
+        map('n', '<leader>ghD', function()
           gitsigns.diffthis '@'
         end, 'Git diff against last commit')
         map('n', '<leader>tb', gitsigns.toggle_current_line_blame, 'Toggle git blame line')
