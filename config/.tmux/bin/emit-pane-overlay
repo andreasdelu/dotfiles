@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+palette_first=160
+palette_last=165
+
+clear_metadata() {
+  local tty="$1"
+  [[ -w "$tty" ]] || return 0
+
+  local sequence=$'\033]104' index
+  for ((index = palette_first; index <= palette_last; index++)); do
+    sequence+=";${index}"
+  done
+  sequence+=$'\033\\'
+  printf '%s' "$sequence" >"$tty" 2>/dev/null || true
+}
+
+append_palette_entry() {
+  local index="$1" red="$2" green="$3" blue="$4" rgb
+  printf -v rgb '%02x/%02x/%02x' "$red" "$green" "$blue"
+  sequence+=";${index};rgb:${rgb}"
+}
+
+append_packed_pair() {
+  local index="$1" first="$2" second="$3"
+  append_palette_entry "$index" \
+    "$((first >> 4))" \
+    "$((((first & 15) << 4) | (second >> 8)))" \
+    "$((second & 255))"
+}
+
+if [[ "${1:-}" == "--clear" ]]; then
+  clear_metadata "${2:?missing client tty}"
+  exit 0
+fi
+
+if (($# != 13)); then
+  printf 'Expected 13 pane overlay arguments, got %s\n' "$#" >&2
+  exit 2
+fi
+
+tty="$1"
+termname="$2"
+client_width="$3"
+client_height="$4"
+cell_width="$5"
+cell_height="$6"
+window_height="$7"
+window_zoomed="$8"
+status_position="$9"
+active_left="${10}"
+active_top="${11}"
+active_width="${12}"
+active_height="${13}"
+
+[[ "$termname" == *ghostty* && -w "$tty" ]] || exit 0
+for value in "$client_width" "$client_height" "$cell_width" "$cell_height" \
+  "$window_height" "$active_left" "$active_top" "$active_width" "$active_height"; do
+  if [[ ! "$value" =~ ^[0-9]+$ ]] || (( value > 4095 )); then
+    clear_metadata "$tty"
+    exit 0
+  fi
+done
+if ((client_width == 0 || client_height == 0 || cell_width == 0 || cell_height == 0)); then
+  clear_metadata "$tty"
+  exit 0
+fi
+
+top_offset=0
+if [[ "$status_position" == "top" ]]; then
+  top_offset="$((client_height - window_height))"
+fi
+content_top="$top_offset"
+content_bottom="$((top_offset + window_height))"
+
+if [[ "$window_zoomed" == "true" || "$window_zoomed" == "1" ]]; then
+  active_left=0
+  active_top=0
+  active_width="$client_width"
+  active_height="$window_height"
+fi
+active_top="$((active_top + top_offset))"
+active_right="$((active_left + active_width))"
+active_bottom="$((active_top + active_height))"
+
+sequence=$'\033]4'
+append_palette_entry 160 84 77 1
+append_packed_pair 161 "$client_width" "$client_height"
+append_packed_pair 162 "$active_left" "$active_top"
+append_packed_pair 163 "$active_right" "$active_bottom"
+append_packed_pair 164 "$content_top" "$content_bottom"
+append_packed_pair 165 "$cell_width" "$cell_height"
+sequence+=$'\033\\'
+
+# One small write keeps the metadata sequence intact at the terminal boundary.
+printf '%s' "$sequence" >"$tty" 2>/dev/null || true

@@ -1,4 +1,5 @@
 .ghostty=~/Library/Application Support/com.mitchellh.ghostty/config
+ghostty/shaders/tmux-pane-dimmer.glsl=~/.config/ghostty/shaders/tmux-pane-dimmer.glsl
 .gitconfig=~/.gitconfig
 .gitignore_global=~/.gitignore_global
 .zshrc=~/.zshrc

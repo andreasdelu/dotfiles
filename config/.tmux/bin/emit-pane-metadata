@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+mode="emit"
+output_override=""
+clear_client_tty=""
+emit_overlay=1
+while (($#)); do
+  case "$1" in
+    --clear-client)
+      mode="clear"
+      clear_client_tty="${2:?missing client tty}"
+      shift 2
+      ;;
+    --output)
+      output_override="${2:?missing output path}"
+      shift 2
+      ;;
+    --snapshot-only)
+      emit_overlay=0
+      shift
+      ;;
+    *)
+      printf 'Unknown argument: %s\n' "$1" >&2
+      exit 2
+      ;;
+  esac
+done
+
+server_metadata="$(tmux display-message -p '#{socket_path}|#{pid}')"
+IFS='|' read -r server_socket server_pid <<<"$server_metadata"
+server_name="$(basename "$server_socket")"
+output_file="${output_override:-${TMUX_PANE_METADATA_FILE:-${XDG_CACHE_HOME:-$HOME/.cache}/tmux/pane-metadata/${server_name}.json}}"
+output_dir="$(dirname "$output_file")"
+lock_dir="${output_file}.lock"
+pending_file="${output_file}.pending"
+tmp_file=""
+lock_held=0
+
+mkdir -p "$output_dir"
+
+cleanup() {
+  [[ -z "$tmp_file" ]] || rm -f "$tmp_file"
+  (( lock_held == 0 )) || rmdir "$lock_dir" 2>/dev/null || true
+}
+trap cleanup EXIT
+
+overlay_emitter="$HOME/.tmux/bin/emit-pane-overlay"
+
+if [[ "$mode" == "clear" ]]; then
+  "$overlay_emitter" --clear "$clear_client_tty"
+  exit 0
+fi
+
+# Every invocation records pending work before competing for the lock. The lock
+# holder waits briefly to coalesce event bursts, then repeats if another event
+# arrived while it was taking a snapshot.
+touch "$pending_file"
+if ! mkdir "$lock_dir" 2>/dev/null; then
+  exit 0
+fi
+lock_held=1
+
+write_snapshot() {
+  tmp_file="$(mktemp "${output_file}.tmp.XXXXXX")"
+
+  # A terminal surface can display only one tmux client. Select the sole client,
+  # or exactly one focused client when several are attached. Anything else is
+  # ambiguous and must not silently produce geometry for the wrong terminal.
+  # Keep all context in list-clients: display-message may otherwise inherit the
+  # invoking pane's session even when given a target client.
+  local clients client_count focused_count metadata inactive_reason
+  clients="$(tmux list-clients -F '#{client_name}|#{client_tty}|#{client_pid}|#{client_width}|#{client_height}|#{client_cell_width}|#{client_cell_height}|#{session_id}|#{window_id}|#{window_width}|#{window_height}|#{?window_zoomed_flag,true,false}|#{status}|#{status-position}|#{client_termname}|#{client_flags}' 2>/dev/null || true)"
+  client_count="$(printf '%s\n' "$clients" | awk 'NF { count++ } END { print count + 0 }')"
+  focused_count="$(printf '%s\n' "$clients" | awk -F '|' '$16 ~ /(^|,)focused(,|$)/ { count++ } END { print count + 0 }')"
+  metadata=""
+  inactive_reason=""
+
+  if (( client_count == 1 )); then
+    metadata="$clients"
+  elif (( focused_count == 1 )); then
+    metadata="$(printf '%s\n' "$clients" | awk -F '|' '$16 ~ /(^|,)focused(,|$)/ { print; exit }')"
+  elif (( client_count == 0 )); then
+    inactive_reason="no_clients"
+  else
+    inactive_reason="ambiguous_clients"
+  fi
+
+  if [[ -z "$metadata" ]]; then
+    if (( emit_overlay )); then
+      while IFS='|' read -r _client_name client_tty _rest; do
+        [[ -z "$client_tty" ]] || "$overlay_emitter" --clear "$client_tty"
+      done <<<"$clients"
+    fi
+    printf '{"version":1,"active":false,"reason":"%s","server":{"name":"%s","socket":"%s","pid":%s},"panes":[]}\n' \
+      "$inactive_reason" "$server_name" "$server_socket" "$server_pid" >"$tmp_file"
+    mv -f "$tmp_file" "$output_file"
+    tmp_file=""
+    return
+  fi
+
+  local client_name client_tty client_pid client_width client_height
+  local cell_width cell_height session_id window_id window_width window_height
+  local window_zoomed status status_position client_termname _client_flags
+  IFS='|' read -r client_name client_tty client_pid client_width client_height \
+    cell_width cell_height session_id window_id window_width window_height \
+    window_zoomed status status_position client_termname _client_flags <<<"$metadata"
+
+  local pane_rows
+  pane_rows="$(tmux list-panes -t "$window_id" -F '#{pane_id}|#{?pane_active,true,false}|#{pane_left}|#{pane_top}|#{pane_width}|#{pane_height}')"
+
+  local first=1
+  {
+    printf '{"version":1,"active":true,'
+    printf '"server":{"name":"%s","socket":"%s","pid":%s},' "$server_name" "$server_socket" "$server_pid"
+    printf '"client":{"name":"%s","tty":"%s","pid":%s,"width":%s,"height":%s,"cell_width":%s,"cell_height":%s},' \
+      "$client_name" "$client_tty" "$client_pid" "$client_width" "$client_height" "$cell_width" "$cell_height"
+    printf '"session_id":"%s","window":{"id":"%s","width":%s,"height":%s,"zoomed":%s},' \
+      "$session_id" "$window_id" "$window_width" "$window_height" "$window_zoomed"
+    printf '"status":{"enabled":"%s","position":"%s"},"panes":[' "$status" "$status_position"
+
+    while IFS='|' read -r pane_id pane_active pane_left pane_top pane_width pane_height; do
+      [[ -n "$pane_id" ]] || continue
+      if (( first )); then
+        first=0
+      else
+        printf ','
+      fi
+      printf '{"id":"%s","active":%s,"left":%s,"top":%s,"width":%s,"height":%s}' \
+        "$pane_id" "$pane_active" "$pane_left" "$pane_top" "$pane_width" "$pane_height"
+    done <<<"$pane_rows"
+
+    printf ']}\n'
+  } >"$tmp_file"
+  mv -f "$tmp_file" "$output_file"
+  tmp_file=""
+
+  if (( emit_overlay )); then
+    local active_pane
+    active_pane="$(printf '%s\n' "$pane_rows" | awk -F '|' '$2 == "true" { print; exit }')"
+    if [[ -n "$active_pane" ]]; then
+      local _pane_id _pane_active active_left active_top active_width active_height
+      IFS='|' read -r _pane_id _pane_active active_left active_top active_width active_height <<<"$active_pane"
+      "$overlay_emitter" "$client_tty" "$client_termname" "$client_width" "$client_height" \
+        "$cell_width" "$cell_height" "$window_height" "$window_zoomed" "$status_position" \
+        "$active_left" "$active_top" "$active_width" "$active_height"
+    else
+      "$overlay_emitter" --clear "$client_tty"
+    fi
+  fi
+}
+
+while [[ -e "$pending_file" ]]; do
+  rm -f "$pending_file"
+  sleep 0.03
+  write_snapshot
+done
+
+rmdir "$lock_dir"
+lock_held=0
+
+# Close the small race between the loop's final check and releasing the lock.
+if [[ -e "$pending_file" ]]; then
+  if (( emit_overlay )); then
+    exec "$0" --output "$output_file"
+  else
+    exec "$0" --output "$output_file" --snapshot-only
+  fi
+fi

@@ -5,6 +5,7 @@ alpha-blending = native
 window-colorspace = display-p3
 window-width = 120
 window-height = 30
+window-padding-balance = true
 macos-titlebar-style = tabs
 palette-generate = false
 
@@ -27,4 +28,5 @@ window-save-state = always
 
 keybind = super+shift+p=toggle_command_palette
 
-custom-shader = /Users/andreasdeleuran/.config/ghostty/shaders/shader.glsl
+custom-shader = ~/.config/ghostty/shaders/tmux-pane-dimmer.glsl
+custom-shader-animation = false

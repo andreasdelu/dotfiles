@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+kind="${1:?missing popup kind}"
+client="${2:?missing client}"
+pane="${3:?missing pane}"
+
+client_tty="$(tmux list-clients -F '#{client_name}|#{client_tty}' | awk -F '|' -v client="$client" '$1 == client { print $2; exit }')"
+[[ -n "$client_tty" ]] || exit 1
+
+"$HOME/.tmux/bin/emit-pane-metadata" --clear-client "$client_tty"
+trap '"$HOME/.tmux/bin/emit-pane-metadata"' EXIT
+
+case "$kind" in
+  sessions)
+    tmux display-popup -c "$client" -t "$pane" -E \
+      "tmux list-sessions -F '#{session_name}' | fzf --reverse | xargs tmux switch-client -t"
+    ;;
+  worktrees)
+    tmux display-popup -c "$client" -t "$pane" -E -h '80%' -w '80%' \
+      ~/.tmux/plugins/tmux-worktree-manager/scripts/run.sh
+    ;;
+  lazygit)
+    current_path="$(tmux display-message -p -t "$pane" '#{pane_current_path}')"
+    tmux display-popup -c "$client" -t "$pane" -E -w '90%' -h '90%' \
+      -b rounded -d "$current_path" lazygit
+    ;;
+  *)
+    printf 'Unknown popup kind: %s\n' "$kind" >&2
+    exit 1
+    ;;
+esac
