@@ -7,6 +7,7 @@ cask "karabiner-elements"
 cask "orbstack"
 cask "tailscale-app"
 cask "linearmouse"
+cask "vorssaint"
 
 # Formulae
 brew "node"
@@ -16,3 +17,4 @@ brew "gh"
 brew "lazygit"
 brew "git-delta"
 brew "tmux"
+brew "neovim"
