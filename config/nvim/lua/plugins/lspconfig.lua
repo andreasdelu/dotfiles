@@ -52,28 +52,8 @@ local function sorbet_project_root(bufnr)
   end
 end
 
-local function is_landfolk_api_root(root)
-  if type(root) ~= 'string' then
-    return false
-  end
-
-  return root:match '/Documents/landfolk/apps/api$' ~= nil
-    or root:match '/Documents/lf%-worktrees/[^/]+/apps/api$' ~= nil
-    or root:match '/Documents/landfolk%-worktrees/[^/]+/apps/api$' ~= nil
-end
-
-local function start_in_nix_dev_shell(dispatchers, config, command)
-  return vim.lsp.rpc.start(command, dispatchers, {
-    cwd = config.root_dir,
-  })
-end
-
 local function start_sorbet(dispatchers, config)
-  if is_landfolk_api_root(config.root_dir) then
-    return start_in_nix_dev_shell(dispatchers, config, { 'nix', 'develop', '../..#api', '-c', './bin/srb', 'tc', '--lsp', '--disable-watchman' })
-  end
-
-  return vim.lsp.rpc.start({ 'srb', 'tc', '--lsp', '--disable-watchman' }, dispatchers, {
+  return vim.lsp.rpc.start(require('config.ruby').sorbet_command(config.root_dir), dispatchers, {
     cwd = config.root_dir,
   })
 end

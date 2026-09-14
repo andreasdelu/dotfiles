@@ -8,18 +8,8 @@ local function ruby_root(bufnr)
   return vim.fs.root(bufnr or 0, { 'Gemfile', '.git' })
 end
 
-local function is_landfolk_api_root(root)
-  if type(root) ~= 'string' then
-    return false
-  end
-
-  return root:match '/Documents/landfolk/apps/api$' ~= nil
-    or root:match '/Documents/lf%-worktrees/[^/]+/apps/api$' ~= nil
-    or root:match '/Documents/landfolk%-worktrees/[^/]+/apps/api$' ~= nil
-end
-
 local function ruby_formatters(bufnr)
-  if is_landfolk_api_root(ruby_root(bufnr)) then
+  if require('config.ruby').is_landfolk_api(ruby_root(bufnr)) then
     return { 'landfolk_api_stree' }
   end
 

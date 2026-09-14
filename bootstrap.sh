@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-. "$(dirname "$0")/scripts/checkbox_menu.sh"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$REPO_DIR"
+. "$REPO_DIR/config/dotfiles/env.sh"
+dotfiles_load_preferences "$REPO_DIR/config/dotfiles/local.env"
+. "$REPO_DIR/scripts/checkbox_menu.sh"
 
 RESET="" BOLD="" DIM="" CYAN="" GREEN="" RED="" YELLOW="" GRAY=""
 if [[ -z "${NO_COLOR:-}" ]]; then
@@ -63,6 +67,16 @@ run_script_step() {
 }
 
 run_brew_bundle() {
+  # The installer runs in a child process; its PATH changes cannot reach us.
+  if ! command -v brew >/dev/null 2>&1; then
+    local bin_dir
+    for bin_dir in /opt/homebrew/bin /usr/local/bin /home/linuxbrew/.linuxbrew/bin; do
+      if [[ -x "$bin_dir/brew" ]]; then
+        export PATH="$bin_dir:$PATH"
+        break
+      fi
+    done
+  fi
   if ! command -v brew >/dev/null 2>&1; then
     echo "Homebrew is required before installing Brewfile packages."
     echo "Run this again and select Homebrew, or install Homebrew manually."
@@ -70,7 +84,9 @@ run_brew_bundle() {
   fi
 
   brew bundle install
+}
 
+install_tpm() {
   if [ ! -d "$HOME/.tmux/plugins/tpm/.git" ]; then
     git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
   fi
@@ -85,15 +101,24 @@ is_selected() {
   return 1
 }
 
-selected_output="$(
-  checkbox_menu "Set up your dotfiles" \
-    "homebrew|Install Homebrew" \
-    "brewfile|Install Brewfile packages and apps" \
-    "ohmyzsh|Install oh-my-zsh" \
-    "dotfiles|Link dotfiles from config/" \
-    "github|Authenticate GitHub" \
-    "macos|Configure macOS system defaults"
-)"
+steps=()
+# Linux package installation stays with the machine's package manager. An
+# existing Homebrew installation can still consume the portable formulae.
+if [[ "$(uname -s)" == Darwin ]]; then
+  steps+=("homebrew|Install Homebrew")
+fi
+if [[ "$(uname -s)" == Darwin ]] || command -v brew >/dev/null 2>&1; then
+  steps+=("brewfile|Install Brewfile packages and apps")
+fi
+command -v zsh >/dev/null 2>&1 && steps+=("ohmyzsh|Install oh-my-zsh")
+steps+=("dotfiles|Link dotfiles from config/")
+if command -v gh >/dev/null 2>&1 || [[ "$(uname -s)" == Darwin ]]; then
+  steps+=("github|Authenticate GitHub")
+fi
+if [[ "$(uname -s)" == Darwin && "$DOTFILES_MACOS_DESKTOP" == 1 ]]; then
+  steps+=("macos|Configure macOS system defaults")
+fi
+selected_output="$(checkbox_menu "Set up your dotfiles" "${steps[@]}")"
 
 SELECTED_STEPS=()
 if [[ -n "$selected_output" ]]; then
@@ -113,7 +138,10 @@ is_selected homebrew && run_script_step "Install Homebrew" install_homebrew.sh
 is_selected brewfile && run_named_step "Install Brewfile packages and apps" run_brew_bundle
 is_selected ohmyzsh && run_script_step "Install oh-my-zsh" install_ohmyzsh.sh
 is_selected dotfiles && run_script_step "Link dotfiles" setup_dotfiles.sh
+# Link first: otherwise a fresh ~/.tmux directory (including TPM) is backed up.
+is_selected brewfile && run_named_step "Install tmux plugin manager" install_tpm
 is_selected github && run_script_step "Authenticate GitHub" authenticate_git.sh
-is_selected macos && run_script_step "Configure macOS system defaults" set_macos_defaults.sh
+# Never let the general assume-yes path authorize system preference changes.
+is_selected macos && run_named_step "Configure macOS system defaults" env DOTFILES_ASSUME_YES=0 ./scripts/set_macos_defaults.sh
 
 printf '\n%b✨ Bootstrap setup complete!%b\n' "$GREEN$BOLD" "$RESET"

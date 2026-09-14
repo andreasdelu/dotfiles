@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+[[ "$(tmux show-option -gqv @dotfiles-pane-dimming)" == on ]] || exit 0
+
 mode="emit"
 output_override=""
 clear_client_tty=""
@@ -49,7 +51,10 @@ trap cleanup EXIT
 overlay_emitter="$HOME/.tmux/bin/emit-pane-overlay"
 
 if [[ "$mode" == "clear" ]]; then
-  "$overlay_emitter" --clear "$clear_client_tty"
+  if tmux list-clients -F '#{client_tty}|#{client_termname}' |
+      awk -F '|' -v tty="$clear_client_tty" '$1 == tty && $2 ~ /ghostty/ { found=1 } END { exit !found }'; then
+    "$overlay_emitter" --clear "$clear_client_tty" ghostty
+  fi
   exit 0
 fi
 
@@ -90,7 +95,7 @@ write_snapshot() {
   if [[ -z "$metadata" ]]; then
     if (( emit_overlay )); then
       while IFS='|' read -r _client_name client_tty _rest; do
-        [[ -z "$client_tty" ]] || "$overlay_emitter" --clear "$client_tty"
+        [[ "$_rest" == *ghostty* ]] && "$overlay_emitter" --clear "$client_tty" ghostty || true
       done <<<"$clients"
     fi
     printf '{"version":1,"active":false,"reason":"%s","server":{"name":"%s","socket":"%s","pid":%s},"panes":[]}\n' \
@@ -106,6 +111,9 @@ write_snapshot() {
   IFS='|' read -r client_name client_tty client_pid client_width client_height \
     cell_width cell_height session_id window_id window_width window_height \
     window_zoomed status status_position client_termname _client_flags <<<"$metadata"
+
+  # Do not create metadata or write terminal sequences for other terminals.
+  [[ "$client_termname" == *ghostty* ]] || return 0
 
   local pane_rows
   pane_rows="$(tmux list-panes -t "$window_id" -F '#{pane_id}|#{?pane_active,true,false}|#{pane_left}|#{pane_top}|#{pane_width}|#{pane_height}')"
@@ -146,7 +154,7 @@ write_snapshot() {
         "$cell_width" "$cell_height" "$window_height" "$window_zoomed" "$status_position" \
         "$active_left" "$active_top" "$active_width" "$active_height"
     else
-      "$overlay_emitter" --clear "$client_tty"
+      "$overlay_emitter" --clear "$client_tty" "$client_termname"
     fi
   fi
 }

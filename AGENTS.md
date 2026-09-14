@@ -4,7 +4,7 @@ Guide for LLMs and coding agents working in this dotfiles repo.
 
 ## What this repo is
 
-This is a personal macOS-focused dotfiles repo.
+This is a personal portable dotfiles repo with opt-in macOS desktop setup.
 
 Primary responsibilities:
 
@@ -30,15 +30,12 @@ The repo is intentionally small and direct. Prefer simple edits over abstraction
 
 `config/` contains the real tracked files. `scripts/setup_dotfiles.sh` links them into `$HOME` or `~/Library/...`.
 
-Current mappings from `maps.txt`:
-
-- `config/.ghostty` → `~/Library/Application Support/com.mitchellh.ghostty/config`
-- `config/.gitconfig` → `~/.gitconfig`
-- `config/.zshrc` → `~/.zshrc`
-- `config/nvim` → `~/.config/nvim`
-- `config/karabiner.json` → `~/.config/karabiner/karabiner.json`
-- `config/.tmux.conf` → `~/.tmux.conf`
-- `config/.tmux` → `~/.tmux`
+`maps.txt` is the authoritative mapping list, including fixed platform/feature
+conditions after `|`. Core shell, tmux, Neovim, Git, and lazygit configuration is
+shared; macOS desktop config links require `DOTFILES_MACOS_DESKTOP=1`.
+`config/dotfiles` links to `~/.config/dotfiles`; its gitignored `local.env` is
+loaded before shell/bootstrap setup without overriding explicit process values.
+See README for all three opt-ins and reload boundaries.
 
 ## Working rules
 
@@ -76,14 +73,11 @@ Prefer targeted fixes and repo-fit over trend-chasing.
 
 ## Bootstrap flow
 
-`bootstrap.sh` runs these in order:
-
-1. `scripts/set_macos_defaults.sh`
-2. `scripts/install_homebrew.sh`
-3. `scripts/install_ohmyzsh.sh`
-4. `scripts/authenticate_git.sh`
-5. `scripts/setup_dotfiles.sh`
-6. `brew bundle install`
+`bootstrap.sh` offers supported steps in a checkbox menu, then runs selected
+Homebrew installation, Brewfile, Oh My Zsh, dotfile linking, TPM installation,
+GitHub authentication, and macOS defaults. TPM is installed after linking so it
+is not stranded in a backup directory. Linux package installation is external;
+macOS defaults require both desktop opt-in and a separate confirmation.
 
 Important characteristics:
 
@@ -128,7 +122,8 @@ Current intended Ruby setup is:
 - **Ruby LSP disabled in active config**
 - **Sorbet** is the Ruby LSP for Sorbet projects
 - Sorbet is root-gated by presence of `sorbet/config`
-- in `~/Documents/landfolk/apps/api`, Sorbet is started through:
+- Landfolk API checkouts are recognized by `lua/config/ruby.lua` using project
+  markers, not the checkout's name or home directory; Sorbet is started through:
   - `nix develop ../..#api -c ./bin/srb tc --lsp --disable-watchman`
 - Rubocop linting and Syntax Tree formatting are limited to actual `.rb` files
 
@@ -150,11 +145,13 @@ This repo uses:
 
 That `runtime` path append is important here because without it, queries may not load and highlighting disappears.
 
-#### Copilot
+#### AI completion
 
-- plugin: `github/copilot.vim`
-- loads on `VimEnter`
-- current intended keybindings:
+Windsurf (`lua/plugins/windsurf.lua`) is active. Copilot is explicitly disabled
+in `lua/plugins/copilot.lua`; do not enable it as part of portability work.
+AI and animation toggles are deferred.
+
+The disabled Copilot spec retains these keybindings:
   - `<C-l>` full accept
   - `<C-j>` accept word
   - `<C-]>` dismiss
@@ -202,11 +199,15 @@ After changing shell/bootstrap/symlink behavior:
 - read the changed script end-to-end
 - make sure paths still point into `config/`
 - if symlink behavior changed, sanity-check `maps.txt` and `scripts/setup_dotfiles.sh`
+- run `bash scripts/test_portability.sh`, `bash scripts/test_bootstrap.sh`,
+  `bash scripts/test_tmux_features.sh`, `bash scripts/test_pane_metadata.sh`, and
+  `bash scripts/test_ghostty.sh`
+- never run bootstrap against live HOME or use the live tmux server for tests
 
 After changing Neovim config:
 
-- run a headless startup check:
-  - `cd ~/.dotfiles && nvim --headless '+lua dofile(vim.fn.expand("config/nvim/init.lua"))' '+qall'`
+- run an isolated headless startup check:
+  - `bash scripts/test_nvim.sh` (copies installed plugins to a temporary HOME)
 - if plugin/parser behavior changed, also run:
   - `cd ~/.dotfiles && nvim --headless '+TSUpdate' '+qall'`
 - if LSP behavior changed, validate against a real file in the target project, not just startup

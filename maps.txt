@@ -1,11 +1,16 @@
-.ghostty=~/Library/Application Support/com.mitchellh.ghostty/config
-ghostty/shaders/tmux-pane-dimmer.glsl=~/.config/ghostty/shaders/tmux-pane-dimmer.glsl
+# Conditions follow |; all destinations are managed only by setup_dotfiles.sh.
+dotfiles=~/.config/dotfiles
+.ghostty=~/Library/Application Support/com.mitchellh.ghostty/config|macos-desktop
+.ghostty=~/.config/ghostty/config|linux
+ghostty/pane-dimming.conf=~/.config/ghostty/pane-dimming.conf|pane-dimming
+ghostty/shaders/tmux-pane-dimmer.glsl=~/.config/ghostty/shaders/tmux-pane-dimmer.glsl|pane-dimming
 .gitconfig=~/.gitconfig
 .gitignore_global=~/.gitignore_global
 .zshrc=~/.zshrc
 nvim=~/.config/nvim
-karabiner.json=~/.config/karabiner/karabiner.json
+karabiner.json=~/.config/karabiner/karabiner.json|macos-desktop
 .tmux.conf=~/.tmux.conf
 .tmux=~/.tmux
-linearmouse.json=~/.config/linearmouse/linearmouse.json
-lazygit/config.yml=~/Library/Application Support/lazygit/config.yml
+linearmouse.json=~/.config/linearmouse/linearmouse.json|macos-desktop
+lazygit/config.yml=~/Library/Application Support/lazygit/config.yml|macos
+lazygit/config.yml=~/.config/lazygit/config.yml|linux

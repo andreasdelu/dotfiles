@@ -13,6 +13,7 @@ install_homebrew() {
 }
 
 main() {
+  [[ "$(uname -s)" == Darwin ]] || { echo "Install Linux packages with your system package manager."; return; }
   if ! confirm "Do you want to install Homebrew?"; then
     echo "Skipping Homebrew installation."
     return

@@ -23,6 +23,14 @@ set_macos_defaults() {
 }
 
 main() {
+  [[ "$(uname -s)" == Darwin ]] || { echo "Skipping macOS defaults on this platform."; return; }
+  local repo_dir
+  repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  . "$repo_dir/config/dotfiles/env.sh"
+  dotfiles_load_preferences "$repo_dir/config/dotfiles/local.env"
+  [[ "$DOTFILES_MACOS_DESKTOP" == 1 ]] || { echo "Skipping macOS defaults (desktop opt-in is off)."; return; }
+  # System defaults always need their own interactive confirmation.
+  DOTFILES_ASSUME_YES=0
   if ! confirm "Do you want to configure macOS system defaults?"; then
     echo "Skipping macOS system defaults configuration."
     return

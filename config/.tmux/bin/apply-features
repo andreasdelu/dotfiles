@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Read the server's explicit environment, not stale pane/session environments.
+set -euo pipefail
+
+# TWM can run without Overwatch. Only enable its reader when state is present.
+tmux set-option -g @twm-overwatch-enable off
+if [[ "$(tmux show-environment -g DOTFILES_PI_OVERWATCH 2>/dev/null || true)" == DOTFILES_PI_OVERWATCH=1 ]] &&
+    [[ -x "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm" ]] &&
+    [[ -d "$HOME/.pi/overwatch/agents" ]]; then
+  tmux set-option -g @twm-overwatch-enable on
+fi
+
+dimming="$(tmux show-environment -g DOTFILES_GHOSTTY_PANE_DIMMING 2>/dev/null || true)"
+was_enabled="$(tmux show-option -gqv @dotfiles-pane-dimming)"
+# Servers running the older unconditional hooks have no feature option yet.
+if tmux show-hooks -g | grep -q 'emit-pane-'; then
+  was_enabled=on
+fi
+tmux set-option -g @dotfiles-pane-dimming off
+
+# These indices belong to this repo. Leave all other hook entries intact.
+for hook in window-pane-changed session-window-changed client-session-changed; do
+  tmux set-hook -gu "${hook}[89]"
+done
+for hook in window-pane-changed window-layout-changed session-window-changed client-resized client-attached client-detached client-focus-in client-session-changed; do
+  tmux set-hook -gu "${hook}[90]"
+done
+
+if [[ "$was_enabled" == on ]]; then
+  while IFS='|' read -r tty termname; do
+    if [[ "$termname" == *ghostty* ]]; then
+      "$HOME/.tmux/bin/emit-pane-overlay" --clear "$tty" "$termname"
+    fi
+  done < <(tmux list-clients -F '#{client_tty}|#{client_termname}')
+fi
+
+# pane-colours is a tmux 3.7 feature. A shader link proves setup opted in;
+# per-client emitters additionally require a Ghostty terminal.
+if [[ "$(tmux display-message -p '#{>=:#{version},3.7}')" == 1 ]]; then
+  for index in 160 161 162 163 164 165; do
+    tmux set-option -wgu "pane-colours[$index]"
+  done
+  if [[ "$dimming" == DOTFILES_GHOSTTY_PANE_DIMMING=1 ]] &&
+      [[ -r "$HOME/.config/ghostty/pane-dimming.conf" ]] &&
+      [[ -x "$HOME/.tmux/bin/emit-pane-overlay" ]]; then
+    tmux set-option -g @dotfiles-pane-dimming on
+    tmux source-file "$HOME/.tmux/pane-dimming.conf"
+  fi
+fi

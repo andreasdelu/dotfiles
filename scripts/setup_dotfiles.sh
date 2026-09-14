@@ -5,6 +5,8 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC_DIR="$REPO_DIR/config"
+. "$SRC_DIR/dotfiles/env.sh"
+dotfiles_load_preferences "$SRC_DIR/dotfiles/local.env"
 MAPS_FILE="${MAPS_FILE:-$REPO_DIR/maps.txt}"
 BACKUP_DIR="${REPO_DIR}/.backup_$(date +%Y%m%d_%H%M%S)"
 DRY_RUN="${DRY_RUN:-0}"
@@ -78,6 +80,35 @@ maps_mode() {
         line="$(printf "%s" "$line" | awk '{$1=$1;print}')"
         [[ -z "$line" ]] && continue
 
+        # Fixed compatibility/preference conditions, not a general expression DSL.
+        local condition="all" enabled=1
+        if [[ "$line" == *'|'* ]]; then
+            condition="${line##*|}"
+            line="${line%|*}"
+        fi
+        case "$condition" in
+            all) ;;
+            macos) [[ "$(uname -s)" == Darwin ]] || enabled=0 ;;
+            linux) [[ "$(uname -s)" == Linux ]] || enabled=0 ;;
+            macos-desktop) [[ "$(uname -s)" == Darwin && "$DOTFILES_MACOS_DESKTOP" == 1 ]] || enabled=0 ;;
+            pane-dimming)
+                [[ "$DOTFILES_GHOSTTY_PANE_DIMMING" == 1 ]] || enabled=0
+                command -v ghostty >/dev/null 2>&1 || enabled=0
+                local tmux_version
+                tmux_version="$(tmux -V 2>/dev/null || true)"
+                if [[ "$tmux_version" =~ ^tmux\ ([0-9]+)\.([0-9]+) ]]; then
+                    (( BASH_REMATCH[1] > 3 || (BASH_REMATCH[1] == 3 && BASH_REMATCH[2] >= 7) )) || enabled=0
+                else
+                    enabled=0
+                fi
+                # On macOS the base Ghostty config itself is a desktop opt-in.
+                if [[ "$(uname -s)" == Darwin && "$DOTFILES_MACOS_DESKTOP" != 1 ]]; then
+                    enabled=0
+                fi
+                ;;
+            *) log "Unknown map condition: $condition" >&2; return 1 ;;
+        esac
+
         # split src=dst (src is relative to config/)
         local src_rel="${line%%=*}"
         local dst_raw="${line#*=}"
@@ -87,6 +118,16 @@ maps_mode() {
         local src_abs="$SRC_DIR/$src_rel"
         local dst_abs
         dst_abs="$(expand_tilde "$dst_raw")"
+
+        if [[ "$enabled" == 0 ]]; then
+            # Reapplying off removes only our exact optional symlink. Never
+            # delete user-owned files, uninstall apps, or reverse system defaults.
+            if [[ -L "$dst_abs" && "$(readlink "$dst_abs")" == "$src_abs" ]]; then
+                run_cmd rm -f "$dst_abs"
+                log "Unlinked (disabled): $dst_abs"
+            fi
+            continue
+        fi
 
         if [[ ! -e "$src_abs" ]]; then
             log "WARN: source missing under config/: $src_rel" >&2
