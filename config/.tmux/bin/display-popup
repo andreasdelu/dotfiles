@@ -17,8 +17,17 @@ fi
 case "$kind" in
   sessions)
     command -v fzf >/dev/null 2>&1 || exec tmux choose-session
+    # Cancellation is a no-op. Pass a stable session ID, not a name through
+    # xargs, and switch the client that opened this popup on its own server.
+    # shellcheck disable=SC2016 # Variables expand inside the popup's shell.
     tmux display-popup -c "$client" -t "$pane" -E \
-      "tmux list-sessions -F '#{session_name}' | fzf --reverse | xargs tmux switch-client -t"
+      -e "DOTFILES_TMUX_CLIENT=$client" \
+      -e "DOTFILES_TMUX_SOCKET=$(tmux display-message -p '#{socket_path}')" '
+        selection=$(tmux -S "$DOTFILES_TMUX_SOCKET" list-sessions -F "#{session_id} #{session_name}" |
+          fzf --reverse --with-nth=2..) || exit 0
+        [ -n "$selection" ] || exit 0
+        tmux -S "$DOTFILES_TMUX_SOCKET" switch-client -c "$DOTFILES_TMUX_CLIENT" -t "${selection%% *}"
+      '
     ;;
   worktrees)
     [[ -x "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm" ]] || exit 0
