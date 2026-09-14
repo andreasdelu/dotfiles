@@ -111,4 +111,19 @@ and tmux reload does not change the Ghostty shader include.
 - `bash scripts/test_pane_metadata.sh` checks popup/emitter gating with stubbed tmux queries.
 - `bash scripts/test_ghostty.sh` validates optional config inclusion using the installed Ghostty CLI; visual shader rendering still needs a real Ghostty window.
 - `bash scripts/test_nvim.sh` checks headless startup with both flag states and an isolated copy of installed plugins (skips if none are installed). It does not test real-project LSP attachment.
-- Ruby LSP remains disabled; Sorbet still requires `sorbet/config`. The existing Landfolk `Documents/.../apps/api` routing through Nix is preserved, not generalized to unrelated Ruby projects.
+- Ruby LSP remains disabled; Sorbet still requires `sorbet/config`. Landfolk API
+  detection uses `apps/api`, the root package name `landfolk`, `flake.nix`,
+  `apps/api/shell.nix`, and `bin/srb`, not a personal checkout path. It runs
+  `nix develop ../..#api -c ./bin/srb tc --lsp --disable-watchman` from that API
+  directory. Other Sorbet projects retain `srb` from PATH.
+- Install/configure Nix with flakes and the project's bundle before using this
+  launcher. Moving a checkout no longer requires editing Neovim; missing Ruby
+  dependencies still require project setup. Syntax Tree/Rubocop keep their
+  existing project-binstub behavior and need the correct shell environment.
+- `nvim --headless -u NONE -l config/nvim/lua/config/ruby.test.lua` checks relocated
+  roots, unrelated projects, `sorbet/config` gating, and exact command/cwd routing.
+  `bash scripts/test_nvim.sh /absolute/path/to/apps/api/app/models/application_record.rb`
+  additionally attempts a real attachment. Its temporary HOME needs Nix settings
+  supplied explicitly (for example `NIX_CONFIG='experimental-features = nix-command flakes'`)
+  and access to installed project gems. The API Nix shell runs its normal local
+  service hooks; this check is opt-in and does not install missing gems.

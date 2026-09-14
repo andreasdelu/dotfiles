@@ -17,9 +17,12 @@ This config is organized around a small bootstrap and explicit modules:
 - `windsurf.lua`: active AI completion; `copilot.lua` is disabled
 
 These plugins are shared across platforms. AI and animation preferences are not
-part of the dotfiles feature flags. Sorbet remains gated on `sorbet/config`, with
-the existing Landfolk checkout-specific Nix command; Rubocop/Syntax Tree are
-limited to actual `.rb` files.
+part of the dotfiles feature flags. Sorbet remains gated on `sorbet/config`.
+`lua/config/ruby.lua` recognizes Landfolk's API by repository markers and runs
+the existing API Nix command from the detected root, independent of checkout
+location. Other Sorbet projects use `srb` on PATH. Nix/flakes and project gems
+must be installed separately. Rubocop/Syntax Tree retain project binstubs and
+are limited to actual `.rb` files; their Ruby runtime comes from the shell.
 
 ## Maintenance rules
 

@@ -122,7 +122,8 @@ Current intended Ruby setup is:
 - **Ruby LSP disabled in active config**
 - **Sorbet** is the Ruby LSP for Sorbet projects
 - Sorbet is root-gated by presence of `sorbet/config`
-- in `~/Documents/landfolk/apps/api`, Sorbet is started through:
+- Landfolk API checkouts are recognized by `lua/config/ruby.lua` using project
+  markers, not the checkout's name or home directory; Sorbet is started through:
   - `nix develop ../..#api -c ./bin/srb tc --lsp --disable-watchman`
 - Rubocop linting and Syntax Tree formatting are limited to actual `.rb` files
 
