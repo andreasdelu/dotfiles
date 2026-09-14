@@ -28,5 +28,5 @@ window-save-state = always
 
 keybind = super+shift+p=toggle_command_palette
 
-custom-shader = ~/.config/ghostty/shaders/tmux-pane-dimmer.glsl
-custom-shader-animation = false
+# Ghostty's native optional include; no environment-variable interpolation.
+config-file = ?~/.config/ghostty/pane-dimming.conf

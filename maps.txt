@@ -2,7 +2,8 @@
 dotfiles=~/.config/dotfiles
 .ghostty=~/Library/Application Support/com.mitchellh.ghostty/config|macos-desktop
 .ghostty=~/.config/ghostty/config|linux
-ghostty/shaders/tmux-pane-dimmer.glsl=~/.config/ghostty/shaders/tmux-pane-dimmer.glsl
+ghostty/pane-dimming.conf=~/.config/ghostty/pane-dimming.conf|pane-dimming
+ghostty/shaders/tmux-pane-dimmer.glsl=~/.config/ghostty/shaders/tmux-pane-dimmer.glsl|pane-dimming
 .gitconfig=~/.gitconfig
 .gitignore_global=~/.gitignore_global
 .zshrc=~/.zshrc

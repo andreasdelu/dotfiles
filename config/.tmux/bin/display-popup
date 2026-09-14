@@ -9,8 +9,10 @@ pane="${3:?missing pane}"
 client_tty="$(tmux list-clients -F '#{client_name}|#{client_tty}' | awk -F '|' -v client="$client" '$1 == client { print $2; exit }')"
 [[ -n "$client_tty" ]] || exit 1
 
-"$HOME/.tmux/bin/emit-pane-metadata" --clear-client "$client_tty"
-trap '"$HOME/.tmux/bin/emit-pane-metadata"' EXIT
+if [[ "$(tmux show-option -gqv @dotfiles-pane-dimming)" == on ]]; then
+  "$HOME/.tmux/bin/emit-pane-metadata" --clear-client "$client_tty"
+  trap '"$HOME/.tmux/bin/emit-pane-metadata"' EXIT
+fi
 
 case "$kind" in
   sessions)

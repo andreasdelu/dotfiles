@@ -36,7 +36,9 @@ defaults; only exactly `1` enables a feature. Unset flags are off on every OS.
 - `DOTFILES_MACOS_DESKTOP=1`: macOS Homebrew casks, Ghostty/Karabiner/LinearMouse
   config links, and the separately confirmed macOS-defaults step. It does not
   install anything on Linux. Config links can be staged before installing apps.
-- `DOTFILES_GHOSTTY_PANE_DIMMING=1`: reserved for the optional Ghostty/tmux pane dimmer.
+- `DOTFILES_GHOSTTY_PANE_DIMMING=1`: Ghostty shader and tmux metadata/hooks.
+  Requires Ghostty on PATH and tmux 3.7+; on macOS also enable desktop config.
+  Only Ghostty clients receive palette metadata. Other terminals retain the core.
 - `DOTFILES_PI_OVERWATCH=1`: reserved for optional Pi Overwatch integration.
 
 Lazygit is a terminal tool, so its native config path stays in the core on both
@@ -66,6 +68,30 @@ reread file defaults. Neovim and new tmux servers inherit from their launching
 shell. Direct GUI/service launches do not read `.zshrc`: launch through the
 configured shell or supply the environment explicitly. Direct `brew bundle`
 likewise uses its process environment, not `local.env`.
+
+### Ghostty and existing tmux servers
+
+Ghostty does not read these environment flags. The linker adds/removes the
+tracked `pane-dimming.conf` fragment; `.ghostty` uses Ghostty's native
+`config-file = ?~/.config/ghostty/pane-dimming.conf` optional inclusion. This
+syntax and traversal are tested with Ghostty 1.3.1, not assumed environment
+interpolation. After relinking, reload Ghostty's configuration (or restart it).
+
+Existing tmux servers retain their original environment. In a fresh configured
+shell, apply the current flags explicitly to the intended server, then reload:
+
+```shell
+tmux set-environment -g DOTFILES_GHOSTTY_PANE_DIMMING "${DOTFILES_GHOSTTY_PANE_DIMMING:-0}"
+tmux set-environment -g DOTFILES_PI_OVERWATCH "${DOTFILES_PI_OVERWATCH:-0}"
+tmux source-file ~/.tmux.conf
+```
+
+Use `tmux -L <name>` consistently for a named server. Restarting that server
+from the configured shell is an alternative, but ends its sessions. Reloading
+removes this repo's dimming hooks and clears Ghostty palette metadata when off;
+unrelated hooks are preserved. Already-running applications/popups keep their
+environment: close/reopen them. Relinking alone does not reload a live server,
+and tmux reload does not change the Ghostty shader include.
 
 ## Notes
 

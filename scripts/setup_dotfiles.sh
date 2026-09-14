@@ -91,6 +91,21 @@ maps_mode() {
             macos) [[ "$(uname -s)" == Darwin ]] || enabled=0 ;;
             linux) [[ "$(uname -s)" == Linux ]] || enabled=0 ;;
             macos-desktop) [[ "$(uname -s)" == Darwin && "$DOTFILES_MACOS_DESKTOP" == 1 ]] || enabled=0 ;;
+            pane-dimming)
+                [[ "$DOTFILES_GHOSTTY_PANE_DIMMING" == 1 ]] || enabled=0
+                command -v ghostty >/dev/null 2>&1 || enabled=0
+                local tmux_version
+                tmux_version="$(tmux -V 2>/dev/null || true)"
+                if [[ "$tmux_version" =~ ^tmux\ ([0-9]+)\.([0-9]+) ]]; then
+                    (( BASH_REMATCH[1] > 3 || (BASH_REMATCH[1] == 3 && BASH_REMATCH[2] >= 7) )) || enabled=0
+                else
+                    enabled=0
+                fi
+                # On macOS the base Ghostty config itself is a desktop opt-in.
+                if [[ "$(uname -s)" == Darwin && "$DOTFILES_MACOS_DESKTOP" != 1 ]]; then
+                    enabled=0
+                fi
+                ;;
             *) log "Unknown map condition: $condition" >&2; return 1 ;;
         esac
 

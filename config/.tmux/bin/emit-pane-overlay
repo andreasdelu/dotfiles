@@ -36,6 +36,8 @@ if [[ "${1:-}" == "--clear" ]]; then
   exit 0
 fi
 
+[[ "$(tmux show-option -gqv @dotfiles-pane-dimming)" == on ]] || exit 0
+
 if (($# != 13)); then
   printf 'Expected 13 pane overlay arguments, got %s\n' "$#" >&2
   exit 2
