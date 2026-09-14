@@ -67,6 +67,16 @@ run_script_step() {
 }
 
 run_brew_bundle() {
+  # The installer runs in a child process; its PATH changes cannot reach us.
+  if ! command -v brew >/dev/null 2>&1; then
+    local bin_dir
+    for bin_dir in /opt/homebrew/bin /usr/local/bin /home/linuxbrew/.linuxbrew/bin; do
+      if [[ -x "$bin_dir/brew" ]]; then
+        export PATH="$bin_dir:$PATH"
+        break
+      fi
+    done
+  fi
   if ! command -v brew >/dev/null 2>&1; then
     echo "Homebrew is required before installing Brewfile packages."
     echo "Run this again and select Homebrew, or install Homebrew manually."
@@ -74,7 +84,9 @@ run_brew_bundle() {
   fi
 
   brew bundle install
+}
 
+install_tpm() {
   if [ ! -d "$HOME/.tmux/plugins/tpm/.git" ]; then
     git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
   fi
@@ -126,6 +138,8 @@ is_selected homebrew && run_script_step "Install Homebrew" install_homebrew.sh
 is_selected brewfile && run_named_step "Install Brewfile packages and apps" run_brew_bundle
 is_selected ohmyzsh && run_script_step "Install oh-my-zsh" install_ohmyzsh.sh
 is_selected dotfiles && run_script_step "Link dotfiles" setup_dotfiles.sh
+# Link first: otherwise a fresh ~/.tmux directory (including TPM) is backed up.
+is_selected brewfile && run_named_step "Install tmux plugin manager" install_tpm
 is_selected github && run_script_step "Authenticate GitHub" authenticate_git.sh
 # Never let the general assume-yes path authorize system preference changes.
 is_selected macos && run_named_step "Configure macOS system defaults" env DOTFILES_ASSUME_YES=0 ./scripts/set_macos_defaults.sh

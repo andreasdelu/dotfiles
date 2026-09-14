@@ -53,7 +53,7 @@ overlay_emitter="$HOME/.tmux/bin/emit-pane-overlay"
 if [[ "$mode" == "clear" ]]; then
   if tmux list-clients -F '#{client_tty}|#{client_termname}' |
       awk -F '|' -v tty="$clear_client_tty" '$1 == tty && $2 ~ /ghostty/ { found=1 } END { exit !found }'; then
-    "$overlay_emitter" --clear "$clear_client_tty"
+    "$overlay_emitter" --clear "$clear_client_tty" ghostty
   fi
   exit 0
 fi
@@ -95,7 +95,7 @@ write_snapshot() {
   if [[ -z "$metadata" ]]; then
     if (( emit_overlay )); then
       while IFS='|' read -r _client_name client_tty _rest; do
-        [[ "$_rest" == *ghostty* ]] && "$overlay_emitter" --clear "$client_tty" || true
+        [[ "$_rest" == *ghostty* ]] && "$overlay_emitter" --clear "$client_tty" ghostty || true
       done <<<"$clients"
     fi
     printf '{"version":1,"active":false,"reason":"%s","server":{"name":"%s","socket":"%s","pid":%s},"panes":[]}\n' \
@@ -154,7 +154,7 @@ write_snapshot() {
         "$cell_width" "$cell_height" "$window_height" "$window_zoomed" "$status_position" \
         "$active_left" "$active_top" "$active_width" "$active_height"
     else
-      "$overlay_emitter" --clear "$client_tty"
+      "$overlay_emitter" --clear "$client_tty" "$client_termname"
     fi
   fi
 }

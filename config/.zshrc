@@ -40,6 +40,7 @@ zstyle ':omz:update' mode auto
 plugins=()
 if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
   for plugin in git aliases fzf z timer zsh-autosuggestions; do
+    [[ "$plugin" == fzf ]] && (( ! $+commands[fzf] )) && continue
     if [[ -d "${ZSH_CUSTOM:-$ZSH/custom}/plugins/$plugin" || -d "$ZSH/plugins/$plugin" ]]; then
       plugins+=("$plugin")
     fi

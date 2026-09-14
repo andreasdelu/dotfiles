@@ -9,7 +9,9 @@ cleanup() {
 }
 trap cleanup EXIT
 export HOME="$scratch/home"
-unset TMUX
+export XDG_CONFIG_HOME="$HOME/.config" XDG_DATA_HOME="$HOME/.local/share"
+export XDG_STATE_HOME="$HOME/.local/state" XDG_CACHE_HOME="$HOME/.cache"
+unset TMUX TMUX_PANE_METADATA_FILE
 mkdir -p "$HOME/.config/ghostty"
 cp -R "$REPO_DIR/config/.tmux" "$HOME/.tmux"
 rm -rf "$HOME/.tmux/plugins"
@@ -24,6 +26,11 @@ t source-file "$HOME/.tmux.conf"
 if [[ "$(t display-message -p '#{>=:#{version},3.7}')" == 1 ]]; then
   [[ "$(t show-option -gqv @dotfiles-pane-dimming)" == on ]]
   t show-hooks -g | grep -q 'client-attached\[90\]'
+  if command -v uv >/dev/null 2>&1 && infocmp xterm-ghostty >/dev/null 2>&1; then
+    uv run --no-project "$REPO_DIR/scripts/test_tmux_client.py" "$scratch/socket"
+  else
+    echo 'SKIP: PTY cleanup check requires uv and xterm-ghostty terminfo'
+  fi
 fi
 t set-environment -g DOTFILES_GHOSTTY_PANE_DIMMING 0
 t source-file "$HOME/.tmux.conf"

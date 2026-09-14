@@ -106,7 +106,9 @@ and tmux reload does not change the Ghostty shader include.
 - Neovim logs like `.nvimlog` are ignored and should not be tracked.
 - macOS defaults always require a separate confirmation, even with `DOTFILES_ASSUME_YES=1`.
 - `bash scripts/test_portability.sh` checks syntax, isolated shell startup, flag precedence, and temporary-HOME linking/backups. Its Linux map check simulates `uname`; it is not an actual Linux runtime test.
-- `bash scripts/test_tmux_features.sh` uses a private socket and temporary HOME to test feature off/on/off and missing dependencies without touching your live server.
+- `bash scripts/test_bootstrap.sh` checks simulated menu/cask filtering and direct defaults-helper consent, with mutations stubbed out.
+- `bash scripts/test_tmux_features.sh` uses a private socket and temporary HOME to test feature off/on/off and missing dependencies without touching your live server. With `uv` and `xterm-ghostty` terminfo, it also attaches a real PTY client to test upgrade-from-old-config and detach cleanup.
+- `bash scripts/test_pane_metadata.sh` checks popup/emitter gating with stubbed tmux queries.
 - `bash scripts/test_ghostty.sh` validates optional config inclusion using the installed Ghostty CLI; visual shader rendering still needs a real Ghostty window.
 - `bash scripts/test_nvim.sh` checks headless startup with both flag states and an isolated copy of installed plugins (skips if none are installed). It does not test real-project LSP attachment.
 - Ruby LSP remains disabled; Sorbet still requires `sorbet/config`. The existing Landfolk `Documents/.../apps/api` routing through Nix is preserved, not generalized to unrelated Ruby projects.

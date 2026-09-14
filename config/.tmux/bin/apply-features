@@ -12,6 +12,10 @@ fi
 
 dimming="$(tmux show-environment -g DOTFILES_GHOSTTY_PANE_DIMMING 2>/dev/null || true)"
 was_enabled="$(tmux show-option -gqv @dotfiles-pane-dimming)"
+# Servers running the older unconditional hooks have no feature option yet.
+if tmux show-hooks -g | grep -q 'emit-pane-'; then
+  was_enabled=on
+fi
 tmux set-option -g @dotfiles-pane-dimming off
 
 # These indices belong to this repo. Leave all other hook entries intact.
@@ -25,7 +29,7 @@ done
 if [[ "$was_enabled" == on ]]; then
   while IFS='|' read -r tty termname; do
     if [[ "$termname" == *ghostty* ]]; then
-      "$HOME/.tmux/bin/emit-pane-overlay" --clear "$tty"
+      "$HOME/.tmux/bin/emit-pane-overlay" --clear "$tty" "$termname"
     fi
   done < <(tmux list-clients -F '#{client_tty}|#{client_termname}')
 fi

@@ -32,7 +32,15 @@ append_packed_pair() {
 }
 
 if [[ "${1:-}" == "--clear" ]]; then
-  clear_metadata "${2:?missing client tty}"
+  # Detached clients have no client_termname format. Remember only terminals
+  # this emitter actually identified as Ghostty, keyed within this tmux server.
+  tty="${2:?missing client tty}"
+  if [[ "${3:-}" != *ghostty* ]] &&
+      [[ "$(tmux show-option -gqv "@dotfiles-ghostty-$tty")" != on ]]; then
+    exit 0
+  fi
+  clear_metadata "$tty"
+  tmux set-option -gu "@dotfiles-ghostty-$tty"
   exit 0
 fi
 
@@ -58,6 +66,7 @@ active_width="${12}"
 active_height="${13}"
 
 [[ "$termname" == *ghostty* && -w "$tty" ]] || exit 0
+tmux set-option -g "@dotfiles-ghostty-$tty" on
 for value in "$client_width" "$client_height" "$cell_width" "$cell_height" \
   "$window_height" "$active_left" "$active_top" "$active_width" "$active_height"; do
   if [[ ! "$value" =~ ^[0-9]+$ ]] || (( value > 4095 )); then
