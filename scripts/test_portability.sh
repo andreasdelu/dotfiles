@@ -6,6 +6,7 @@ scratch="$(mktemp -d)"
 trap 'rm -rf "$scratch"' EXIT
 mkdir -p "$scratch/repo" "$scratch/home" "$scratch/bin"
 cp -R "$REPO_DIR/config" "$REPO_DIR/scripts" "$REPO_DIR/maps.txt" "$scratch/repo/"
+rm -f "$scratch/repo/config/dotfiles/local.env"
 export HOME="$scratch/home"
 unset TMUX DOTFILES_MACOS_DESKTOP DOTFILES_GHOSTTY_PANE_DIMMING DOTFILES_PI_OVERWATCH
 
@@ -32,4 +33,19 @@ DOTFILES_ASSUME_YES=1 bash "$scratch/repo/scripts/setup_dotfiles.sh" > "$scratch
 grep -q 'OK (linked)' "$scratch/relinks"
 env -i HOME="$HOME" PATH=/usr/bin:/bin TERM=xterm-256color zsh -d -i -c '[[ -z ${aliases[pax]-} ]]' > "$scratch/zsh-out" 2> "$scratch/zsh-err"
 [[ ! -s "$scratch/zsh-err" ]]
-printf 'PASS: syntax, native/simulated-Linux maps, isolated links/backups, minimal zsh startup\n'
+# Defaults load once, without evaluating code or overriding explicit zero.
+printf 'DOTFILES_MACOS_DESKTOP=1\nDOTFILES_GHOSTTY_PANE_DIMMING=1\nDOTFILES_PI_OVERWATCH=1\n' > "$scratch/repo/config/dotfiles/local.env"
+for shell in bash zsh; do
+  "$shell" -c '. "$1"; dotfiles_load_preferences "$2"; test "$DOTFILES_MACOS_DESKTOP:$DOTFILES_GHOSTTY_PANE_DIMMING:$DOTFILES_PI_OVERWATCH" = 1:1:1' _ "$REPO_DIR/config/dotfiles/env.sh" "$scratch/repo/config/dotfiles/local.env"
+  DOTFILES_MACOS_DESKTOP=0 DOTFILES_GHOSTTY_PANE_DIMMING=0 DOTFILES_PI_OVERWATCH=0 "$shell" -c '. "$1"; dotfiles_load_preferences "$2"; test "$DOTFILES_MACOS_DESKTOP:$DOTFILES_GHOSTTY_PANE_DIMMING:$DOTFILES_PI_OVERWATCH" = 0:0:0' _ "$REPO_DIR/config/dotfiles/env.sh" "$scratch/repo/config/dotfiles/local.env"
+done
+# Simulate macOS for deterministic desktop link checks on either host OS.
+printf '#!/bin/sh\nprintf "Darwin\\n"\n' > "$scratch/bin/uname"
+PATH="$scratch/bin:$PATH" DOTFILES_ASSUME_YES=1 bash "$scratch/repo/scripts/setup_dotfiles.sh" > "$scratch/desktop-on"
+[[ -L "$HOME/.config/linearmouse/linearmouse.json" ]]
+PATH="$scratch/bin:$PATH" DOTFILES_MACOS_DESKTOP=0 DOTFILES_ASSUME_YES=1 bash "$scratch/repo/scripts/setup_dotfiles.sh" > "$scratch/desktop-off"
+[[ ! -e "$HOME/.config/linearmouse/linearmouse.json" ]]
+printf 'user owned\n' > "$HOME/.config/linearmouse/linearmouse.json"
+PATH="$scratch/bin:$PATH" DOTFILES_MACOS_DESKTOP=0 DOTFILES_ASSUME_YES=1 bash "$scratch/repo/scripts/setup_dotfiles.sh" > /dev/null
+grep -q 'user owned' "$HOME/.config/linearmouse/linearmouse.json"
+printf 'PASS: syntax, native/simulated maps, isolated links/backups, minimal zsh, preference precedence, desktop on/off\n'

@@ -3,6 +3,8 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_DIR"
+. "$REPO_DIR/config/dotfiles/env.sh"
+dotfiles_load_preferences "$REPO_DIR/config/dotfiles/local.env"
 . "$REPO_DIR/scripts/checkbox_menu.sh"
 
 RESET="" BOLD="" DIM="" CYAN="" GREEN="" RED="" YELLOW="" GRAY=""
@@ -101,7 +103,9 @@ steps+=("dotfiles|Link dotfiles from config/")
 if command -v gh >/dev/null 2>&1 || [[ "$(uname -s)" == Darwin ]]; then
   steps+=("github|Authenticate GitHub")
 fi
-[[ "$(uname -s)" == Darwin ]] && steps+=("macos|Configure macOS system defaults")
+if [[ "$(uname -s)" == Darwin && "$DOTFILES_MACOS_DESKTOP" == 1 ]]; then
+  steps+=("macos|Configure macOS system defaults")
+fi
 selected_output="$(checkbox_menu "Set up your dotfiles" "${steps[@]}")"
 
 SELECTED_STEPS=()

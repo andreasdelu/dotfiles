@@ -1,5 +1,6 @@
-# Desktop applications are only supported by Homebrew on macOS.
-if OS.mac?
+# Compatibility is not consent: desktop apps require an explicit opt-in.
+# bootstrap.sh loads local preferences; direct brew bundle uses process env.
+if OS.mac? && ENV["DOTFILES_MACOS_DESKTOP"] == "1"
 cask "ghostty"
 cask "spotify"
 cask "arc"

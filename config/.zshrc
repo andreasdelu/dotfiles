@@ -1,3 +1,9 @@
+# Preferences precede all shell/tool setup; child processes inherit the flags.
+if [[ -r "$HOME/.config/dotfiles/env.sh" ]]; then
+  source "$HOME/.config/dotfiles/env.sh"
+  dotfiles_load_preferences "$HOME/.config/dotfiles/local.env"
+fi
+
 # Discover installed tools before loading plugins and aliases.
 path_prepend_if_missing() {
   local dir="$1"

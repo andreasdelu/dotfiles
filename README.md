@@ -20,6 +20,28 @@ git clone https://github.com/andreasdelu/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 ```
 
+**Choose optional features**
+
+```shell
+cp config/dotfiles/local.env.example config/dotfiles/local.env
+# Edit local.env: set only the features you want to 1.
+```
+
+`local.env` is gitignored and accepts only the three documented `NAME=0` or
+`NAME=1` assignments, blank lines, and whole-line comments. It is data, not shell
+code. Bootstrap and the linked zsh entrypoint load it before setup. Explicit
+process environment values (including `0` or an empty value) win over file
+defaults; only exactly `1` enables a feature. Unset flags are off on every OS.
+
+- `DOTFILES_MACOS_DESKTOP=1`: macOS Homebrew casks, Ghostty/Karabiner/LinearMouse
+  config links, and the separately confirmed macOS-defaults step. It does not
+  install anything on Linux. Config links can be staged before installing apps.
+- `DOTFILES_GHOSTTY_PANE_DIMMING=1`: reserved for the optional Ghostty/tmux pane dimmer.
+- `DOTFILES_PI_OVERWATCH=1`: reserved for optional Pi Overwatch integration.
+
+Lazygit is a terminal tool, so its native config path stays in the core on both
+platforms. The Linux Ghostty config remains usable independently of macOS apps.
+
 **Run the `bootstrap.sh` script**
 
 ```shell
@@ -29,6 +51,21 @@ cd ~/.dotfiles
 ## Symlinks
 
 The mapping in [maps.txt](maps.txt) drives the symlink setup. `scripts/setup_dotfiles.sh` links files from `config/` into your home directory and backs up existing files into a timestamped `.backup_*` folder in the repo before replacing them.
+
+## Applying preferences
+
+Run `./scripts/setup_dotfiles.sh` after changing link preferences (or select
+linking in bootstrap). `DRY_RUN=1 DOTFILES_ASSUME_YES=1 ./scripts/setup_dotfiles.sh`
+previews the same decisions. Disabling removes only exact links owned by this
+checkout; other files remain untouched. Existing apps are not uninstalled and
+macOS system defaults are not reversed.
+
+Start a fresh shell after changing `local.env`. Re-sourcing `.zshrc` retains
+already-exported values by design; unset the three flags first if you want to
+reread file defaults. Neovim and new tmux servers inherit from their launching
+shell. Direct GUI/service launches do not read `.zshrc`: launch through the
+configured shell or supply the environment explicitly. Direct `brew bundle`
+likewise uses its process environment, not `local.env`.
 
 ## Notes
 

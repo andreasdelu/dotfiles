@@ -1,13 +1,15 @@
-.ghostty=~/Library/Application Support/com.mitchellh.ghostty/config|macos
+# Conditions follow |; all destinations are managed only by setup_dotfiles.sh.
+dotfiles=~/.config/dotfiles
+.ghostty=~/Library/Application Support/com.mitchellh.ghostty/config|macos-desktop
 .ghostty=~/.config/ghostty/config|linux
 ghostty/shaders/tmux-pane-dimmer.glsl=~/.config/ghostty/shaders/tmux-pane-dimmer.glsl
 .gitconfig=~/.gitconfig
 .gitignore_global=~/.gitignore_global
 .zshrc=~/.zshrc
 nvim=~/.config/nvim
-karabiner.json=~/.config/karabiner/karabiner.json|macos
+karabiner.json=~/.config/karabiner/karabiner.json|macos-desktop
 .tmux.conf=~/.tmux.conf
 .tmux=~/.tmux
-linearmouse.json=~/.config/linearmouse/linearmouse.json|macos
+linearmouse.json=~/.config/linearmouse/linearmouse.json|macos-desktop
 lazygit/config.yml=~/Library/Application Support/lazygit/config.yml|macos
 lazygit/config.yml=~/.config/lazygit/config.yml|linux
