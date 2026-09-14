@@ -16,14 +16,17 @@ fi
 
 case "$kind" in
   sessions)
+    command -v fzf >/dev/null 2>&1 || exec tmux choose-session
     tmux display-popup -c "$client" -t "$pane" -E \
       "tmux list-sessions -F '#{session_name}' | fzf --reverse | xargs tmux switch-client -t"
     ;;
   worktrees)
+    [[ -x "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm" ]] || exit 0
     tmux display-popup -c "$client" -t "$pane" -E -h '80%' -w '80%' \
       ~/.tmux/plugins/tmux-worktree-manager/scripts/run.sh
     ;;
   lazygit)
+    command -v lazygit >/dev/null 2>&1 || exit 0
     current_path="$(tmux display-message -p -t "$pane" '#{pane_current_path}')"
     tmux display-popup -c "$client" -t "$pane" -E -w '90%' -h '90%' \
       -b rounded -d "$current_path" lazygit

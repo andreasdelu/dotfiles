@@ -75,8 +75,13 @@ if [[ -x "$HOME/Documents/pax/bin/pax" ]]; then
   alias paxc='~/Documents/pax/bin/pax --cwd "$PWD" --continue'
 fi
 [[ -x "$HOME/pip/bin/pip" ]] && alias pip='~/pip/bin/pip'
+# Clear the old alias on reload; Overwatch is optional, not a TWM prerequisite.
+unalias twm 2>/dev/null || true
 if [[ -x "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm" ]]; then
-  alias twm='TWM_OVERWATCH_ENABLE=true ~/.tmux/plugins/tmux-worktree-manager/dist/twm'
+  alias twm='TWM_OVERWATCH_ENABLE=false ~/.tmux/plugins/tmux-worktree-manager/dist/twm'
+  if [[ "${DOTFILES_PI_OVERWATCH:-0}" == 1 && -d "$HOME/.pi/overwatch/agents" ]]; then
+    alias twm='TWM_OVERWATCH_ENABLE=true ~/.tmux/plugins/tmux-worktree-manager/dist/twm'
+  fi
 fi
 
 # Functions

@@ -48,4 +48,8 @@ PATH="$scratch/bin:$PATH" DOTFILES_MACOS_DESKTOP=0 DOTFILES_ASSUME_YES=1 bash "$
 printf 'user owned\n' > "$HOME/.config/linearmouse/linearmouse.json"
 PATH="$scratch/bin:$PATH" DOTFILES_MACOS_DESKTOP=0 DOTFILES_ASSUME_YES=1 bash "$scratch/repo/scripts/setup_dotfiles.sh" > /dev/null
 grep -q 'user owned' "$HOME/.config/linearmouse/linearmouse.json"
-printf 'PASS: syntax, native/simulated maps, isolated links/backups, minimal zsh, preference precedence, desktop on/off\n'
+mkdir -p "$HOME/.tmux/plugins/tmux-worktree-manager/dist" "$HOME/.pi/overwatch/agents"
+printf '#!/bin/sh\nexit 0\n' > "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm"
+chmod +x "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm"
+DOTFILES_PI_OVERWATCH=1 zsh -d -i -c '[[ ${aliases[twm]} == *ENABLE=true* ]]; export DOTFILES_PI_OVERWATCH=0; source ~/.zshrc; [[ ${aliases[twm]} == *ENABLE=false* ]]'
+printf 'PASS: syntax, native/simulated maps, isolated links/backups, minimal zsh, preference precedence, desktop/Overwatch on-off\n'

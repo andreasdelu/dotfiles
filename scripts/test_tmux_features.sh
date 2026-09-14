@@ -35,4 +35,23 @@ rm "$HOME/.config/ghostty/pane-dimming.conf"
 t set-environment -g DOTFILES_GHOSTTY_PANE_DIMMING 1
 t source-file "$HOME/.tmux.conf"
 [[ "$(t show-option -gqv @dotfiles-pane-dimming)" == off ]]
-printf 'PASS: isolated tmux server, dimming off/on/off, unrelated hook preserved, missing dependency\n'
+# Overwatch remains off until both the TWM binary and producer state exist.
+[[ "$(t show-option -gqv @twm-overwatch-enable)" == off ]]
+t set-environment -g DOTFILES_PI_OVERWATCH 1
+t source-file "$HOME/.tmux.conf"
+[[ "$(t show-option -gqv @twm-overwatch-enable)" == off ]]
+mkdir -p "$HOME/.tmux/plugins/tmux-worktree-manager/dist" "$HOME/.pi/overwatch/agents"
+printf '#!/bin/sh\nexit 0\n' > "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm"
+chmod +x "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm"
+t source-file "$HOME/.tmux.conf"
+[[ "$(t show-option -gqv @twm-overwatch-enable)" == on ]]
+t list-keys -T prefix | grep 'prefix W ' | grep -q worktrees
+t set-environment -g DOTFILES_PI_OVERWATCH 0
+t source-file "$HOME/.tmux.conf"
+[[ "$(t show-option -gqv @twm-overwatch-enable)" == off ]]
+# TWM itself stays usable when Overwatch is off.
+t list-keys -T prefix | grep 'prefix W ' | grep -q worktrees
+rm "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm"
+t source-file "$HOME/.tmux.conf"
+! t list-keys -T prefix | grep 'prefix W ' | grep -q worktrees
+printf 'PASS: isolated tmux, dimming/Overwatch off-on-off, unrelated hooks, dependency-aware bindings\n'

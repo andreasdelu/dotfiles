@@ -2,6 +2,14 @@
 # Read the server's explicit environment, not stale pane/session environments.
 set -euo pipefail
 
+# TWM can run without Overwatch. Only enable its reader when state is present.
+tmux set-option -g @twm-overwatch-enable off
+if [[ "$(tmux show-environment -g DOTFILES_PI_OVERWATCH 2>/dev/null || true)" == DOTFILES_PI_OVERWATCH=1 ]] &&
+    [[ -x "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm" ]] &&
+    [[ -d "$HOME/.pi/overwatch/agents" ]]; then
+  tmux set-option -g @twm-overwatch-enable on
+fi
+
 dimming="$(tmux show-environment -g DOTFILES_GHOSTTY_PANE_DIMMING 2>/dev/null || true)"
 was_enabled="$(tmux show-option -gqv @dotfiles-pane-dimming)"
 tmux set-option -g @dotfiles-pane-dimming off
