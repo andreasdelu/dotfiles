@@ -1,4 +1,5 @@
-# Cask applications
+# Desktop applications are only supported by Homebrew on macOS.
+if OS.mac?
 cask "ghostty"
 cask "spotify"
 cask "arc"
@@ -8,6 +9,7 @@ cask "orbstack"
 cask "tailscale-app"
 cask "linearmouse"
 cask "vorssaint"
+end
 
 # Formulae
 brew "node"

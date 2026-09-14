@@ -1,3 +1,29 @@
+# Discover installed tools before loading plugins and aliases.
+path_prepend_if_missing() {
+  local dir="$1"
+  [[ -d "$dir" ]] || return 0
+  [[ ":$PATH:" == *":$dir:"* ]] && return 0
+  export PATH="$dir:$PATH"
+}
+
+for brew_bin in /opt/homebrew/bin /usr/local/bin /home/linuxbrew/.linuxbrew/bin; do
+  [[ -x "$brew_bin/brew" ]] && path_prepend_if_missing "$brew_bin"
+done
+if (( $+commands[brew] )); then
+  path_prepend_if_missing "$(brew --prefix)/opt/postgresql@17/bin"
+fi
+if [[ -z ${PNPM_HOME+x} ]]; then
+  if [[ "$OSTYPE" == darwin* ]]; then
+    export PNPM_HOME="$HOME/Library/pnpm"
+  else
+    export PNPM_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/pnpm"
+  fi
+fi
+for bin_dir in "$PNPM_HOME" "$HOME/.bun/bin" "$HOME/bin" "$HOME/.local/bin"; do
+  path_prepend_if_missing "$bin_dir"
+done
+unset brew_bin bin_dir
+
 # Oh My Zsh
 export ZSH="$HOME/.oh-my-zsh"
 
@@ -5,9 +31,16 @@ ZSH_THEME="robbyrussell"
 
 zstyle ':omz:update' mode auto
 
-plugins=(git aliases fzf z timer zsh-autosuggestions)
-
-source "$ZSH/oh-my-zsh.sh"
+plugins=()
+if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
+  for plugin in git aliases fzf z timer zsh-autosuggestions; do
+    if [[ -d "${ZSH_CUSTOM:-$ZSH/custom}/plugins/$plugin" || -d "$ZSH/plugins/$plugin" ]]; then
+      plugins+=("$plugin")
+    fi
+  done
+  unset plugin
+  source "$ZSH/oh-my-zsh.sh"
+fi
 
 # Hooks
 (( $+commands[direnv] )) && eval "$(direnv hook zsh)"
@@ -23,7 +56,7 @@ alias td='task dev'
 alias tdg='task dev:enable-goodjob'
 alias tgqd='task graphql:dump'
 alias gglm='git pull origin main'
-alias ls='eza --icons=always -a'
+(( $+commands[eza] )) && alias ls='eza --icons=always -a'
 alias ts='echo -e "\n\033[1;35m--- 🕒 SYSTEM TIMESTAMPS ---\033[0m"; \
 echo -e "\033[1;32mLocal     :\033[0m \033[36m$(date "+%A, %B %d, %Y %H:%M:%S")\033[0m"; \
 echo -e "\033[1;32mISO-8601  :\033[0m \033[33m$(date "+%Y-%m-%dT%H:%M:%S%z")\033[0m"; \
@@ -31,10 +64,14 @@ echo -e "\033[1;32mUnix Epoch:\033[0m \033[1;37m$(date +%s)\033[0m"; \
 echo -e "\033[1;32mUTC/Zulu  :\033[0m \033[34m$(date -u "+%H:%M:%S UTC")\033[0m"; \
 echo -e "\033[1;32mFilename  :\033[0m \033[90m$(date "+%Y%m%d%H%M%S")\033[0m"; \
 echo -e "\033[1;35m----------------------------\033[0m\n"'
-alias pax='~/Documents/pax/bin/pax --cwd "$PWD"'
-alias paxc='~/Documents/pax/bin/pax --cwd "$PWD" --continue'
-alias pip='~/pip/bin/pip'
-alias twm='TWM_OVERWATCH_ENABLE=true ~/.tmux/plugins/tmux-worktree-manager/dist/twm'
+if [[ -x "$HOME/Documents/pax/bin/pax" ]]; then
+  alias pax='~/Documents/pax/bin/pax --cwd "$PWD"'
+  alias paxc='~/Documents/pax/bin/pax --cwd "$PWD" --continue'
+fi
+[[ -x "$HOME/pip/bin/pip" ]] && alias pip='~/pip/bin/pip'
+if [[ -x "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm" ]]; then
+  alias twm='TWM_OVERWATCH_ENABLE=true ~/.tmux/plugins/tmux-worktree-manager/dist/twm'
+fi
 
 # Functions
 gfixup() {
@@ -60,19 +97,5 @@ updatedotfiles() {
   git -C "$dotfiles_dir" pull origin main && "$dotfiles_dir/bootstrap.sh"
 }
 
-# PATH
-path_prepend_if_missing() {
-  local dir="$1"
-  [[ -z "$dir" ]] && return 0
-  [[ ":$PATH:" == *":$dir:"* ]] && return 0
-  export PATH="$dir:$PATH"
-}
-
-export PNPM_HOME="$HOME/Library/pnpm"
-
-path_prepend_if_missing "$HOME/.local/bin"
-path_prepend_if_missing "$PNPM_HOME"
-path_prepend_if_missing "/opt/homebrew/opt/postgresql@17/bin"
-path_prepend_if_missing "/opt/homebrew/bin/bun"
-path_prepend_if_missing "$HOME/.bun/bin"
-path_prepend_if_missing "$HOME/bin"
+# A minimal installation without optional tools should still start successfully.
+true

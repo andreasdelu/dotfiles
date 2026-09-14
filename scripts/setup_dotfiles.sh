@@ -78,6 +78,19 @@ maps_mode() {
         line="$(printf "%s" "$line" | awk '{$1=$1;print}')"
         [[ -z "$line" ]] && continue
 
+        # Optional fixed platform condition: src=dst|macos or |linux.
+        local condition="all"
+        if [[ "$line" == *'|'* ]]; then
+            condition="${line##*|}"
+            line="${line%|*}"
+        fi
+        case "$condition" in
+            all) ;;
+            macos) [[ "$(uname -s)" == Darwin ]] || continue ;;
+            linux) [[ "$(uname -s)" == Linux ]] || continue ;;
+            *) log "Unknown map condition: $condition" >&2; return 1 ;;
+        esac
+
         # split src=dst (src is relative to config/)
         local src_rel="${line%%=*}"
         local dst_raw="${line#*=}"

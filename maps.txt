@@ -1,11 +1,13 @@
-.ghostty=~/Library/Application Support/com.mitchellh.ghostty/config
+.ghostty=~/Library/Application Support/com.mitchellh.ghostty/config|macos
+.ghostty=~/.config/ghostty/config|linux
 ghostty/shaders/tmux-pane-dimmer.glsl=~/.config/ghostty/shaders/tmux-pane-dimmer.glsl
 .gitconfig=~/.gitconfig
 .gitignore_global=~/.gitignore_global
 .zshrc=~/.zshrc
 nvim=~/.config/nvim
-karabiner.json=~/.config/karabiner/karabiner.json
+karabiner.json=~/.config/karabiner/karabiner.json|macos
 .tmux.conf=~/.tmux.conf
 .tmux=~/.tmux
-linearmouse.json=~/.config/linearmouse/linearmouse.json
-lazygit/config.yml=~/Library/Application Support/lazygit/config.yml
+linearmouse.json=~/.config/linearmouse/linearmouse.json|macos
+lazygit/config.yml=~/Library/Application Support/lazygit/config.yml|macos
+lazygit/config.yml=~/.config/lazygit/config.yml|linux

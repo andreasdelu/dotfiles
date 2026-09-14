@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-. "$(dirname "$0")/scripts/checkbox_menu.sh"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$REPO_DIR"
+. "$REPO_DIR/scripts/checkbox_menu.sh"
 
 RESET="" BOLD="" DIM="" CYAN="" GREEN="" RED="" YELLOW="" GRAY=""
 if [[ -z "${NO_COLOR:-}" ]]; then
@@ -85,15 +87,22 @@ is_selected() {
   return 1
 }
 
-selected_output="$(
-  checkbox_menu "Set up your dotfiles" \
-    "homebrew|Install Homebrew" \
-    "brewfile|Install Brewfile packages and apps" \
-    "ohmyzsh|Install oh-my-zsh" \
-    "dotfiles|Link dotfiles from config/" \
-    "github|Authenticate GitHub" \
-    "macos|Configure macOS system defaults"
-)"
+steps=()
+# Linux package installation stays with the machine's package manager. An
+# existing Homebrew installation can still consume the portable formulae.
+if [[ "$(uname -s)" == Darwin ]]; then
+  steps+=("homebrew|Install Homebrew")
+fi
+if [[ "$(uname -s)" == Darwin ]] || command -v brew >/dev/null 2>&1; then
+  steps+=("brewfile|Install Brewfile packages and apps")
+fi
+command -v zsh >/dev/null 2>&1 && steps+=("ohmyzsh|Install oh-my-zsh")
+steps+=("dotfiles|Link dotfiles from config/")
+if command -v gh >/dev/null 2>&1 || [[ "$(uname -s)" == Darwin ]]; then
+  steps+=("github|Authenticate GitHub")
+fi
+[[ "$(uname -s)" == Darwin ]] && steps+=("macos|Configure macOS system defaults")
+selected_output="$(checkbox_menu "Set up your dotfiles" "${steps[@]}")"
 
 SELECTED_STEPS=()
 if [[ -n "$selected_output" ]]; then
@@ -114,6 +123,7 @@ is_selected brewfile && run_named_step "Install Brewfile packages and apps" run_
 is_selected ohmyzsh && run_script_step "Install oh-my-zsh" install_ohmyzsh.sh
 is_selected dotfiles && run_script_step "Link dotfiles" setup_dotfiles.sh
 is_selected github && run_script_step "Authenticate GitHub" authenticate_git.sh
-is_selected macos && run_script_step "Configure macOS system defaults" set_macos_defaults.sh
+# Never let the general assume-yes path authorize system preference changes.
+is_selected macos && run_named_step "Configure macOS system defaults" env DOTFILES_ASSUME_YES=0 ./scripts/set_macos_defaults.sh
 
 printf '\n%b✨ Bootstrap setup complete!%b\n' "$GREEN$BOLD" "$RESET"

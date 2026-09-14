@@ -10,10 +10,16 @@ This config is organized around a small bootstrap and explicit modules:
 ## Plugin layout
 
 - `colorscheme.lua`: theme setup
-- `editor.lua`: editing UX, statusline, treesitter, git signs, folds
-- `navigation.lua`: Telescope, Neo-tree, tmux navigation, git change pickers
-- `lsp.lua`: LSP, completion, formatting
-- `ruby.lua`: Ruby linting and spec helpers
+- `statusline.lua`, `treesitter.lua`, `gitsigns.lua`, `ufo.lua`: editing UI
+- `telescope.lua`, `neo-tree.lua`, `harpoon.lua`, `vim-tmux-navigator.lua`: navigation
+- `lspconfig.lua`, `blink-cmp.lua`, `conform.lua`: LSP, completion, formatting
+- `lint.lua`, `ruby-spec.lua`: Ruby linting and spec helpers
+- `windsurf.lua`: active AI completion; `copilot.lua` is disabled
+
+These plugins are shared across platforms. AI and animation preferences are not
+part of the dotfiles feature flags. Sorbet remains gated on `sorbet/config`, with
+the existing Landfolk checkout-specific Nix command; Rubocop/Syntax Tree are
+limited to actual `.rb` files.
 
 ## Maintenance rules
 

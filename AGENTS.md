@@ -150,11 +150,13 @@ This repo uses:
 
 That `runtime` path append is important here because without it, queries may not load and highlighting disappears.
 
-#### Copilot
+#### AI completion
 
-- plugin: `github/copilot.vim`
-- loads on `VimEnter`
-- current intended keybindings:
+Windsurf (`lua/plugins/windsurf.lua`) is active. Copilot is explicitly disabled
+in `lua/plugins/copilot.lua`; do not enable it as part of portability work.
+AI and animation toggles are deferred.
+
+The disabled Copilot spec retains these keybindings:
   - `<C-l>` full accept
   - `<C-j>` accept word
   - `<C-]>` dismiss
