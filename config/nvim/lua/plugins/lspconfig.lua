@@ -301,6 +301,25 @@ return {
       tailwindcss = {},
       ts_ls = {},
       graphql = {},
+      -- Root on the oxlint config (not the nearest workspace package.json, which lspconfig
+      -- would pick in monorepos) so the hoisted node_modules/.bin/oxlint is found.
+      oxlint = {
+        mason = false,
+        root_dir = function(bufnr, on_dir)
+          local root = vim.fs.root(bufnr, { '.oxlintrc.json', '.oxlintrc.jsonc', 'oxlint.config.ts' })
+          if root then
+            on_dir(root)
+          end
+        end,
+        cmd = function(dispatchers, config)
+          local cmd = 'oxlint'
+          local local_cmd = vim.fs.joinpath(config.root_dir or '', 'node_modules/.bin/oxlint')
+          if vim.fn.executable(local_cmd) == 1 then
+            cmd = local_cmd
+          end
+          return vim.lsp.rpc.start({ cmd, '--lsp' }, dispatchers)
+        end,
+      },
       eslint = {
         settings = {
           codeActionOnSave = {
