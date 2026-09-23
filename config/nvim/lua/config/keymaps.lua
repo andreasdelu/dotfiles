@@ -1,5 +1,7 @@
 local map = vim.keymap.set
 
+vim.api.nvim_create_user_command('W', 'write', { desc = 'Write current buffer' })
+
 map('n', '<Esc>', '<cmd>nohlsearch<CR>')
 map('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic quickfix list' })
 map('n', '<leader>dd', function()
