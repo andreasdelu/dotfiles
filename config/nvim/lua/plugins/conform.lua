@@ -61,6 +61,7 @@ return {
         scss = true,
         markdown = true,
         ruby = true,
+        rust = true,
       }
 
       if not format_on_save_filetypes[vim.bo[bufnr].filetype] then
@@ -111,6 +112,7 @@ return {
       typescript = { 'oxfmt', 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
       typescriptreact = { 'oxfmt', 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
       ruby = ruby_formatters,
+      rust = { 'rustfmt' },
       json = { 'oxfmt', 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
       jsonc = { 'oxfmt', 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
       css = { 'oxfmt', 'biome-check', 'prettierd', 'prettier', stop_after_first = true },

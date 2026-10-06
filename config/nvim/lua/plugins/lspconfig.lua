@@ -279,6 +279,7 @@ return {
         },
       },
       tailwindcss = {},
+      rust_analyzer = { mason = false },
       ts_ls = {},
       graphql = {},
       -- Root on the oxlint config (not the nearest workspace package.json, which lspconfig
