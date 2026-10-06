@@ -1,5 +1,8 @@
 return {
   'sphamba/smear-cursor.nvim',
+  -- The plugin hides Neovim's real cursor while drawing its animation, which
+  -- can make the cursor flicker or briefly disappear in terminal rendering.
+  enabled = false,
   event = 'VeryLazy',
   opts = {
     stiffness = 0.8,
