@@ -58,6 +58,12 @@ platforms. The Linux Ghostty config remains usable independently of macOS apps.
 
 The mapping in [maps.txt](maps.txt) drives the symlink setup. `scripts/setup_dotfiles.sh` links files from `config/` into your home directory and backs up existing files into a timestamped `.backup_*` folder in the repo before replacing them.
 
+### Vorssaint settings
+
+`config/Vorssaint Settings.plist` is an export from Vorssaint's **Settings → Advanced → Export settings**. It preserves the selected features, modules, layout, and preferences without linking the live macOS preferences plist or carrying over machine-specific paths. Vorssaint is installed by the macOS Brewfile step; after installing, restore the settings with **Settings → Advanced → Import settings** and select this file. Bootstrap does not import it or overwrite existing Vorssaint preferences.
+
+When changing the setup, export again to this file and review the changes before committing. Keep personal notes and local device/permission state out of the repo; permissions may still need to be granted on a new Mac.
+
 ## Applying preferences
 
 Run `./scripts/setup_dotfiles.sh` after changing link preferences (or select

@@ -145,3 +145,6 @@ is_selected github && run_script_step "Authenticate GitHub" authenticate_git.sh
 is_selected macos && run_named_step "Configure macOS system defaults" env DOTFILES_ASSUME_YES=0 ./scripts/set_macos_defaults.sh
 
 printf '\n%b✨ Bootstrap setup complete!%b\n' "$GREEN$BOLD" "$RESET"
+if [[ "$(uname -s)" == Darwin ]]; then
+  echo "Vorssaint: import config/Vorssaint Settings.plist in Settings → Advanced → Import settings."
+fi
