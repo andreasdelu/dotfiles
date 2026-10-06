@@ -10,6 +10,7 @@ cask "orbstack"
 cask "tailscale-app"
 cask "linearmouse"
 cask "vorssaint"
+cask "steipete/tap/trimmy"
 end
 
 # Formulae
