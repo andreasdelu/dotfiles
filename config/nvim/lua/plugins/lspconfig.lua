@@ -41,15 +41,15 @@ local function sorbet_publish_diagnostics(err, result, ctx, config)
   return vim.lsp.handlers['textDocument/publishDiagnostics'](err, result, ctx, config)
 end
 
-local function ruby_project_root(bufnr)
-  return vim.fs.root(bufnr, { 'Gemfile', '.ruby-version' })
-end
-
 local function sorbet_project_root(bufnr)
-  local root = ruby_project_root(bufnr)
-  if root and vim.uv.fs_stat(root .. '/sorbet/config') then
-    return root
-  end
+  return vim.fs.root(bufnr, function(name, path)
+    if name ~= 'sorbet' then
+      return false
+    end
+
+    local config = vim.uv.fs_stat(vim.fs.joinpath(path, name, 'config'))
+    return config ~= nil and config.type == 'file'
+  end)
 end
 
 local function start_sorbet(dispatchers, config)

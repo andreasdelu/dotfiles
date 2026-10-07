@@ -14,12 +14,8 @@ local function telescope_config()
   local builtin = require 'telescope.builtin'
   vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = 'Search help' })
   vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = 'Search keymaps' })
-  vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = 'Search files' })
   vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = 'Search Telescope pickers' })
-  vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = 'Search current word' })
-  vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = 'Search by grep' })
   vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = 'Search diagnostics' })
-  vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = 'Search resume' })
   vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = 'Search recent files' })
   vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = 'Find existing buffers' })
   vim.keymap.set('n', '<leader>/', function()
@@ -34,9 +30,6 @@ local function telescope_config()
       prompt_title = 'Live Grep in Open Files',
     }
   end, { desc = 'Search in open files' })
-  vim.keymap.set('n', '<leader>sn', function()
-    builtin.find_files { cwd = vim.fn.stdpath 'config' }
-  end, { desc = 'Search Neovim files' })
 end
 
 local function git_root()

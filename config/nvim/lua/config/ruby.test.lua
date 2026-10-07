@@ -76,6 +76,20 @@ local ok, err = pcall(function()
     selected = dir
   end)
   assert(selected and ruby.is_landfolk_api(selected))
+
+  -- Nested gems still belong to the enclosing Sorbet workspace. Choosing the
+  -- nearest Gemfile would split one checkout into multiple LSP clients.
+  local nested_gem = selected .. '/gems/example'
+  write(nested_gem .. '/Gemfile', {})
+  local nested_buffer = vim.api.nvim_create_buf(true, false)
+  vim.api.nvim_buf_set_name(nested_buffer, nested_gem .. '/lib/example.rb')
+  vim.bo[nested_buffer].filetype = 'ruby'
+  local nested_root
+  callback 'sorbet_root_dir'(nested_buffer, function(dir)
+    nested_root = dir
+  end)
+  assert(nested_root == selected, 'Nested gems must reuse the enclosing Sorbet workspace')
+
   vim.fn.delete(selected .. '/sorbet/config')
   local attached = false
   callback 'sorbet_root_dir'(buffer, function()

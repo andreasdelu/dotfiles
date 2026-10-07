@@ -11,13 +11,14 @@ This config is organized around a small bootstrap and explicit modules:
 
 - `colorscheme.lua`: theme setup
 - `statusline.lua`, `treesitter.lua`, `gitsigns.lua`, `ufo.lua`: editing UI
-- `telescope.lua`, `neo-tree.lua`, `harpoon.lua`, `vim-tmux-navigator.lua`: navigation
+- `fff.lua`, `telescope.lua`, `neo-tree.lua`, `harpoon.lua`, `vim-tmux-navigator.lua`: navigation
 - `lspconfig.lua`, `blink-cmp.lua`, `conform.lua`: LSP, completion, formatting
 - `lint.lua`, `ruby-spec.lua`: Ruby linting and spec helpers
 - `windsurf.lua`: active AI completion; `copilot.lua` is disabled
 
 These plugins are shared across platforms. AI and animation preferences are not
-part of the dotfiles feature flags. Sorbet remains gated on `sorbet/config`.
+part of the dotfiles feature flags. Sorbet remains gated on the nearest enclosing
+`sorbet/config`, so Ruby files in nested gems share the parent Sorbet workspace.
 `lua/config/ruby.lua` recognizes Landfolk's API by repository markers and runs
 the existing API Nix command from the detected root, independent of checkout
 location. Other Sorbet projects use `srb` on PATH. Nix/flakes and project gems

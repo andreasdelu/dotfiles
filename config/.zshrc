@@ -4,6 +4,11 @@ if [[ -r "$HOME/.config/dotfiles/env.sh" ]]; then
   dotfiles_load_preferences "$HOME/.config/dotfiles/local.env"
 fi
 
+# Load Nix here because macOS updates can replace the system shell startup hook.
+if [[ -r /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
+  source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+fi
+
 # Discover installed tools before loading plugins and aliases.
 path_prepend_if_missing() {
   local dir="$1"

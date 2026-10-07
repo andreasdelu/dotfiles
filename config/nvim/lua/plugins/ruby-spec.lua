@@ -196,7 +196,7 @@ local function copy_nearest_spec_command()
     return
   end
 
-  local command = rspec_command(target)
+  local command = 'rspec ' .. target
   vim.fn.setreg('+', command)
   vim.fn.setreg('"', command)
   vim.notify('Copied: ' .. command, vim.log.levels.INFO)
