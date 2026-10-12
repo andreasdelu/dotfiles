@@ -8,7 +8,6 @@ ghostty/shaders/tmux-pane-dimmer.glsl=~/.config/ghostty/shaders/tmux-pane-dimmer
 .gitignore_global=~/.gitignore_global
 .zshrc=~/.zshrc
 nvim=~/.config/nvim
-karabiner.json=~/.config/karabiner/karabiner.json|macos-desktop
 .tmux.conf=~/.tmux.conf
 .tmux=~/.tmux
 linearmouse.json=~/.config/linearmouse/linearmouse.json|macos-desktop
