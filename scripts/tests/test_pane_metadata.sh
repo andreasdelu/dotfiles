@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Stub tmux's query surface to test palette/popup side effects without a terminal.
 set -euo pipefail
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 scratch="$(mktemp -d)"
 trap 'rm -rf "$scratch"' EXIT
 export HOME="$scratch/home"
 mkdir -p "$HOME/.tmux/bin" "$scratch/bin"
-cp "$REPO_DIR/config/.tmux/bin/"* "$HOME/.tmux/bin/"
+cp "$REPO_DIR/config/tmux/bin/"* "$HOME/.tmux/bin/"
 export TEST_CALLS="$scratch/calls" TEST_TTY="$scratch/tty" TEST_FEATURE=off
 : > "$TEST_TTY"
 cat > "$scratch/bin/tmux" <<'STUB'

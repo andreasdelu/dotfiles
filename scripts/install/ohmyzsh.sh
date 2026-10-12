@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-. "$(dirname "$0")/common.sh"
+. "$(dirname "$0")/../common.sh"
 
 install_ohmyzsh() {
   if [ ! -d "$HOME/.oh-my-zsh" ]; then
@@ -13,6 +13,10 @@ install_ohmyzsh() {
 }
 
 main() {
+  if ! command -v zsh >/dev/null 2>&1; then
+    echo "Install zsh first (select the Linux packages step, if available)." >&2
+    return 1
+  fi
   if ! confirm "Do you want to install oh-my-zsh?"; then
     echo "Skipping oh-my-zsh installation."
     return

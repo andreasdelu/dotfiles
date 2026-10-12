@@ -2,14 +2,6 @@
 # Read the server's explicit environment, not stale pane/session environments.
 set -euo pipefail
 
-# TWM can run without Overwatch. Only enable its reader when state is present.
-tmux set-option -g @twm-overwatch-enable off
-if [[ "$(tmux show-environment -g DOTFILES_PI_OVERWATCH 2>/dev/null || true)" == DOTFILES_PI_OVERWATCH=1 ]] &&
-    [[ -x "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm" ]] &&
-    [[ -d "$HOME/.pi/overwatch/agents" ]]; then
-  tmux set-option -g @twm-overwatch-enable on
-fi
-
 dimming="$(tmux show-environment -g DOTFILES_GHOSTTY_PANE_DIMMING 2>/dev/null || true)"
 was_enabled="$(tmux show-option -gqv @dotfiles-pane-dimming)"
 # Servers running the older unconditional hooks have no feature option yet.
@@ -40,7 +32,8 @@ if [[ "$(tmux display-message -p '#{>=:#{version},3.7}')" == 1 ]]; then
   for index in 160 161 162 163 164 165; do
     tmux set-option -wgu "pane-colours[$index]"
   done
-  if [[ "$dimming" == DOTFILES_GHOSTTY_PANE_DIMMING=1 ]] &&
+  if [[ "$(uname -s)" == Darwin ]] &&
+      [[ "$dimming" == DOTFILES_GHOSTTY_PANE_DIMMING=1 ]] &&
       [[ -r "$HOME/.config/ghostty/pane-dimming.conf" ]] &&
       [[ -x "$HOME/.tmux/bin/emit-pane-overlay" ]]; then
     tmux set-option -g @dotfiles-pane-dimming on

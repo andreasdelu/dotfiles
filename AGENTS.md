@@ -4,14 +4,14 @@ Guide for LLMs and coding agents working in this dotfiles repo.
 
 ## What this repo is
 
-This is a personal portable dotfiles repo with opt-in macOS desktop setup.
+This is a personal portable dotfiles repo with macOS and Linux setup helpers.
 
 Primary responsibilities:
 
 - bootstrap a new machine
-- install packages via Homebrew
+- install packages via Homebrew on macOS or the native package manager on Linux (apt supported first)
 - symlink files from `config/` into their real locations
-- maintain Neovim, shell, terminal, tmux, git, and Karabiner config
+- maintain Neovim, shell, terminal, tmux, Git, and platform-specific app config
 
 The repo is intentionally small and direct. Prefer simple edits over abstractions.
 
@@ -22,26 +22,33 @@ The repo is intentionally small and direct. Prefer simple edits over abstraction
 - `README.md` — human-facing setup overview
 - `bootstrap.sh` — interactive machine setup entrypoint
 - `Brewfile` — Homebrew packages
-- `maps.txt` — source-to-destination symlink map
-- `scripts/` — bootstrap helpers
+- `maps/common.txt`, `maps/macos.txt`, `maps/linux.txt` — source-to-destination symlink maps
+- `scripts/install/` — shared Oh My Zsh plus `macos/` (Homebrew/Brewfile) and `linux/` (apt/editor)
+- `exports/` — app setting snapshots (not linked)
+- `scripts/tests/` — isolated setup/editor checks
+- `scripts/` — linker, defaults, and bootstrap helpers
 - `config/` — canonical source of truth for symlinked config files
 
 ### Symlink model
 
-`config/` contains the real tracked files. `scripts/setup_dotfiles.sh` links them into `$HOME` or `~/Library/...`.
+`config/` contains the real tracked files, with plain source names (for example
+`config/zshrc` -> `~/.zshrc`, `config/zsh/` -> `~/.config/zsh/`,
+`config/tmux/` -> `~/.tmux/`).
+`scripts/setup_dotfiles.sh` links them into `$HOME` or `~/Library/...`.
 
-`maps.txt` is the authoritative mapping list, including fixed platform/feature
-conditions after `|`. Core shell, tmux, Neovim, Git, and lazygit configuration is
-shared; macOS desktop config links require `DOTFILES_MACOS_DESKTOP=1`.
-`config/dotfiles` links to `~/.config/dotfiles`; its gitignored `local.env` is
-loaded before shell/bootstrap setup without overriding explicit process values.
-See README for all three opt-ins and reload boundaries.
+`maps/common.txt` and one platform map are the authoritative mapping lists;
+fixed feature conditions follow `|`. Core shell, tmux, Neovim, and Git links
+are shared; lazygit destinations differ by OS, while Ghostty links are
+macOS-only. macOS defaults require separate confirmation.
+`config/dotfiles` links to `~/.config/dotfiles`; its gitignored `local.env` only
+controls optional Ghostty pane dimming and never overrides explicit process
+values. See README for reload boundaries.
 
 ## Working rules
 
 ### 1. Edit inside `config/`, not the live destination
 
-If you want to change Neovim, zsh, Ghostty, tmux, Git, or Karabiner config, edit the tracked file under `config/`.
+If you want to change Neovim, zsh, Ghostty, tmux, Git, or app config, edit the tracked file under `config/`.
 
 Do **not** edit the symlink target path directly unless you are explicitly debugging a symlink problem.
 
@@ -50,7 +57,7 @@ Do **not** edit the symlink target path directly unless you are explicitly debug
 If you add a new dotfile:
 
 1. create it under `config/`
-2. add the mapping to `maps.txt`
+2. add the mapping to `maps/common.txt` or the relevant platform map
 3. only then mention how it gets linked
 
 Do not introduce a second linking mechanism.
@@ -74,16 +81,19 @@ Prefer targeted fixes and repo-fit over trend-chasing.
 ## Bootstrap flow
 
 `bootstrap.sh` offers supported steps in a checkbox menu, then runs selected
-Homebrew installation, Brewfile, Oh My Zsh, dotfile linking, TPM installation,
-GitHub authentication, and macOS defaults. TPM is installed after linking so it
-is not stranded in a backup directory. Linux package installation is external;
-macOS defaults require both desktop opt-in and a separate confirmation.
+native Linux packages (apt adapter, version-independent) plus latest stable
+Neovim/Tree-sitter CLI, or macOS Homebrew/Brewfile, then Oh My Zsh, dotfile
+linking, TPM, GitHub authentication, and macOS defaults. TPM is installed after
+linking, independently of package selection, so it is not stranded in a backup
+directory. For other Linux package managers, add an adapter rather than falling
+back to Linuxbrew; macOS defaults always need a separate confirmation and run
+per-user settings without `sudo`.
 
 Important characteristics:
 
 - interactive by default
 - safe to skip steps one by one
-- symlink setup backs up existing files into a timestamped `.backup_*` folder at repo root
+- linking preflights both maps and backs up existing files and foreign symlinks into a unique `.backup_*` folder only when needed
 
 ## Neovim guide
 
@@ -155,29 +165,31 @@ That `runtime` path append is important here because without it, queries may not
 
 ### Shell / terminal
 
-- `config/.zshrc`
-- `config/.ghostty`
-- `config/.tmux.conf`
-- `config/.tmux/`
+- `config/zshrc` — ordered loader; source `landfolk.sh` before PATH/plugins for Nix
+- `config/zsh/` — Landfolk (including Nix/Pax), environment, plugins, general aliases/functions
+- `config/ghostty/config`
+- `config/tmux.conf`
+- `config/tmux/` (`features.conf` loads the optional pane-dimming handler)
 
 ### Git
 
-- `config/.gitconfig`
+- `config/gitconfig`
 - `scripts/authenticate_git.sh`
 
 ### macOS / keyboard
 
-- `config/karabiner.json`
+- `config/linearmouse.json`
 - `scripts/set_macos_defaults.sh`
 
 ### Bootstrap / installation
 
 - `bootstrap.sh`
 - `Brewfile`
-- `scripts/install_homebrew.sh`
-- `scripts/install_ohmyzsh.sh`
+- `scripts/install/macos/homebrew.sh` and `scripts/install/macos/brewfile.sh`
+- `scripts/install/linux/apt.sh` and `scripts/install/linux/editor.sh`
+- `scripts/install/ohmyzsh.sh` (shared)
 - `scripts/setup_dotfiles.sh`
-- `maps.txt`
+- `maps/`
 
 ## Validation checklist
 
@@ -185,16 +197,16 @@ After changing shell/bootstrap/symlink behavior:
 
 - read the changed script end-to-end
 - make sure paths still point into `config/`
-- if symlink behavior changed, sanity-check `maps.txt` and `scripts/setup_dotfiles.sh`
-- run `bash scripts/test_portability.sh`, `bash scripts/test_bootstrap.sh`,
-  `bash scripts/test_tmux_features.sh`, `bash scripts/test_pane_metadata.sh`, and
-  `bash scripts/test_ghostty.sh`
+- if symlink behavior changed, sanity-check `maps/{common,macos,linux}.txt` and `scripts/setup_dotfiles.sh`
+- run `bash scripts/tests/test_portability.sh`, `bash scripts/tests/test_bootstrap.sh`,
+  `bash scripts/tests/test_tmux_features.sh`, `bash scripts/tests/test_pane_metadata.sh`, and
+  `bash scripts/tests/test_ghostty.sh`
 - never run bootstrap against live HOME or use the live tmux server for tests
 
 After changing Neovim config:
 
 - run an isolated headless startup check:
-  - `bash scripts/test_nvim.sh` (copies installed plugins to a temporary HOME)
+  - `bash scripts/tests/test_nvim.sh` (copies installed plugins to a temporary HOME)
 - if plugin/parser behavior changed, also run:
   - `cd ~/.dotfiles && nvim --headless '+TSUpdate' '+qall'`
 - if LSP behavior changed, validate against a real file in the target project, not just startup

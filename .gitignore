@@ -6,5 +6,5 @@
 .env
 **/.nvimlog
 .nvimlog
-config/.tmux/plugins/*
+config/tmux/plugins/*
 config/dotfiles/local.env

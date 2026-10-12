@@ -1,0 +1,2 @@
+# Linux XDG destinations; no desktop app links yet.
+lazygit/config.yml=~/.config/lazygit/config.yml

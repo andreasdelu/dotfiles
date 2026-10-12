@@ -66,28 +66,17 @@ run_script_step() {
   run_named_step "$title" env DOTFILES_ASSUME_YES=1 "./scripts/$script"
 }
 
-run_brew_bundle() {
-  # The installer runs in a child process; its PATH changes cannot reach us.
-  if ! command -v brew >/dev/null 2>&1; then
-    local bin_dir
-    for bin_dir in /opt/homebrew/bin /usr/local/bin /home/linuxbrew/.linuxbrew/bin; do
-      if [[ -x "$bin_dir/brew" ]]; then
-        export PATH="$bin_dir:$PATH"
-        break
-      fi
-    done
-  fi
-  if ! command -v brew >/dev/null 2>&1; then
-    echo "Homebrew is required before installing Brewfile packages."
-    echo "Run this again and select Homebrew, or install Homebrew manually."
-    return 1
-  fi
-
-  brew bundle install
-}
-
 install_tpm() {
+  if ! command -v tmux >/dev/null 2>&1; then
+    echo "Skipping TPM: install tmux first."
+    return 0
+  fi
+  if ! command -v git >/dev/null 2>&1; then
+    echo "Skipping TPM: install git first."
+    return 0
+  fi
   if [ ! -d "$HOME/.tmux/plugins/tpm/.git" ]; then
+    mkdir -p "$HOME/.tmux/plugins"
     git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
   fi
 }
@@ -102,20 +91,28 @@ is_selected() {
 }
 
 steps=()
-# Linux package installation stays with the machine's package manager. An
-# existing Homebrew installation can still consume the portable formulae.
-if [[ "$(uname -s)" == Darwin ]]; then
-  steps+=("homebrew|Install Homebrew")
+linux_packages_available=0
+case "$(uname -s)" in
+  Darwin)
+    steps+=("homebrew|Install Homebrew" "brewfile|Install Brewfile packages and apps")
+    ;;
+  Linux)
+    if command -v apt-get >/dev/null 2>&1; then
+      linux_packages_available=1
+      steps+=("linux-packages|Install apt packages and latest stable editor")
+    else
+      echo "No supported Linux package manager found (apt-get). Install dependencies manually; linking remains available." >&2
+    fi
+    ;;
+esac
+if command -v zsh >/dev/null 2>&1 || [[ "$linux_packages_available" == 1 ]]; then
+  steps+=("ohmyzsh|Install oh-my-zsh")
 fi
-if [[ "$(uname -s)" == Darwin ]] || command -v brew >/dev/null 2>&1; then
-  steps+=("brewfile|Install Brewfile packages and apps")
-fi
-command -v zsh >/dev/null 2>&1 && steps+=("ohmyzsh|Install oh-my-zsh")
-steps+=("dotfiles|Link dotfiles from config/")
+steps+=("dotfiles|Link dotfiles and install TPM")
 if command -v gh >/dev/null 2>&1 || [[ "$(uname -s)" == Darwin ]]; then
   steps+=("github|Authenticate GitHub")
 fi
-if [[ "$(uname -s)" == Darwin && "$DOTFILES_MACOS_DESKTOP" == 1 ]]; then
+if [[ "$(uname -s)" == Darwin ]]; then
   steps+=("macos|Configure macOS system defaults")
 fi
 selected_output="$(checkbox_menu "Set up your dotfiles" "${steps[@]}")"
@@ -134,17 +131,18 @@ fi
 
 printf '\n%bRunning %s selected bootstrap step(s)...%b\n' "$BOLD" "${#SELECTED_STEPS[@]}" "$RESET"
 
-is_selected homebrew && run_script_step "Install Homebrew" install_homebrew.sh
-is_selected brewfile && run_named_step "Install Brewfile packages and apps" run_brew_bundle
-is_selected ohmyzsh && run_script_step "Install oh-my-zsh" install_ohmyzsh.sh
+is_selected linux-packages && run_script_step "Install apt packages and editor" install/linux/apt.sh
+is_selected homebrew && run_script_step "Install Homebrew" install/macos/homebrew.sh
+is_selected brewfile && run_script_step "Install Brewfile packages and apps" install/macos/brewfile.sh
+is_selected ohmyzsh && run_script_step "Install oh-my-zsh" install/ohmyzsh.sh
 is_selected dotfiles && run_script_step "Link dotfiles" setup_dotfiles.sh
 # Link first: otherwise a fresh ~/.tmux directory (including TPM) is backed up.
-is_selected brewfile && run_named_step "Install tmux plugin manager" install_tpm
+is_selected dotfiles && run_named_step "Install tmux plugin manager" install_tpm
 is_selected github && run_script_step "Authenticate GitHub" authenticate_git.sh
 # Never let the general assume-yes path authorize system preference changes.
 is_selected macos && run_named_step "Configure macOS system defaults" env DOTFILES_ASSUME_YES=0 ./scripts/set_macos_defaults.sh
 
 printf '\n%b✨ Bootstrap setup complete!%b\n' "$GREEN$BOLD" "$RESET"
 if [[ "$(uname -s)" == Darwin ]]; then
-  echo "Vorssaint: import config/Vorssaint Settings.plist in Settings → Advanced → Import settings."
+  echo "Vorssaint: import exports/vorssaint-settings.plist in Settings → Advanced → Import settings."
 fi

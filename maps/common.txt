@@ -1,0 +1,9 @@
+# Shared paths on macOS and Linux.
+dotfiles=~/.config/dotfiles
+gitconfig=~/.gitconfig
+gitignore_global=~/.gitignore_global
+zsh=~/.config/zsh
+zshrc=~/.zshrc
+nvim=~/.config/nvim
+tmux.conf=~/.tmux.conf
+tmux=~/.tmux

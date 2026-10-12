@@ -1,6 +1,5 @@
-# Compatibility is not consent: desktop apps require an explicit opt-in.
-# bootstrap.sh loads local preferences; direct brew bundle uses process env.
-if OS.mac? && ENV["DOTFILES_MACOS_DESKTOP"] == "1"
+# macOS only. Selecting the Brewfile step installs both CLI tools and apps.
+abort "This Brewfile is macOS-only" unless OS.mac?
 cask "ghostty"
 cask "spotify"
 cask "arc"
@@ -10,7 +9,6 @@ cask "tailscale-app"
 cask "linearmouse"
 cask "vorssaint"
 cask "steipete/tap/trimmy"
-end
 
 # Formulae
 brew "node"
