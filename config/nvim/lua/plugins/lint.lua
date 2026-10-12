@@ -23,15 +23,6 @@ return {
       return 'rubocop'
     end
 
-    local function lint_ruby(bufnr)
-      bufnr = bufnr or 0
-      if not is_ruby_file(bufnr) then
-        return
-      end
-
-      lint.try_lint('rubocop', { cwd = ruby_root(bufnr) })
-    end
-
     if lint.linters.rubocop then
       lint.linters.rubocop.cmd = rubocop_cmd
     end
@@ -42,10 +33,8 @@ return {
 
     vim.keymap.set('n', '<leader>l', function()
       if is_ruby_file(0) then
-        lint_ruby(0)
-      else
-        lint.try_lint()
+        lint.try_lint('rubocop', { cwd = ruby_root(0) })
       end
-    end, { desc = 'Lint buffer' })
+    end, { desc = 'Lint Ruby file' })
   end,
 }

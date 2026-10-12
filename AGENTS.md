@@ -132,7 +132,6 @@ If Ruby tooling seems broken, check `config/nvim/lua/plugins/`:
 - `lspconfig.lua`
 - `lint.lua`
 - `conform.lua`
-- `ruby-spec.lua`
 
 #### Tree-sitter on Neovim 0.12
 
@@ -145,24 +144,12 @@ This repo uses:
 
 That `runtime` path append is important here because without it, queries may not load and highlighting disappears.
 
-#### AI completion
+#### Inline suggestions
 
-Windsurf (`lua/plugins/windsurf.lua`) is active. Copilot is explicitly disabled
-in `lua/plugins/copilot.lua`; do not enable it as part of portability work.
-AI and animation toggles are deferred.
-
-The disabled Copilot spec retains these keybindings:
-  - `<C-l>` full accept
-  - `<C-j>` accept word
-  - `<C-]>` dismiss
-  - `<M-]>` next
-  - `<M-[>` previous
-
-When editing Copilot mappings, check the installed plugin docs instead of guessing:
-
-- `~/.local/share/nvim/lazy/copilot.vim/doc/copilot.txt`
-
-Full accept is an `expr` mapping via `copilot#Accept(...)`; it is **not** a `<Plug>(copilot-accept)` mapping in this plugin.
+- plugin: `Exafunction/windsurf.nvim` (Codeium), loaded on `InsertEnter`
+- keybindings: `<C-l>` accept, `<C-j>` accept word, `<C-]>` dismiss, `<M-]>` next, `<M-[>` previous
+- `.env*` buffers disable suggestions; keep this protection when changing the plugin
+- Copilot is not configured; do not reintroduce a second suggestion engine casually.
 
 ## Useful file map
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copy existing plugin installations: never install/update into the live HOME.
+# Copy existing plugin and parser installations: never install/update into the live HOME.
 set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 plugin_source="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/lazy"
@@ -12,6 +12,10 @@ trap 'rm -rf "$scratch"' EXIT
 mkdir -p "$scratch/home/.config" "$scratch/home/.local/share/nvim"
 cp -R "$REPO_DIR/config/nvim" "$scratch/home/.config/"
 cp -R "$plugin_source" "$scratch/home/.local/share/nvim/lazy"
+site_source="$(dirname "$plugin_source")/site"
+if [[ -d "$site_source" ]]; then
+  cp -R "$site_source" "$scratch/home/.local/share/nvim/"
+fi
 export HOME="$scratch/home"
 export XDG_CONFIG_HOME="$HOME/.config" XDG_DATA_HOME="$HOME/.local/share"
 export XDG_STATE_HOME="$HOME/.local/state" XDG_CACHE_HOME="$HOME/.cache"
@@ -22,12 +26,23 @@ nvim --headless -u NONE -i NONE -l "$REPO_DIR/config/nvim/lua/config/ruby.test.l
 for flag in 0 1; do
   export DOTFILES_MACOS_DESKTOP="$flag" DOTFILES_GHOSTTY_PANE_DIMMING="$flag" DOTFILES_PI_OVERWATCH="$flag"
   # Startup-only mode opens no project file; real attachment is opt-in below.
-  nvim --headless --cmd "$no_install" '+lua assert(vim.env.DOTFILES_PI_OVERWATCH == os.getenv("DOTFILES_PI_OVERWATCH")); assert(vim.g.mapleader == " "); assert(require("lazy.core.config").plugins["windsurf.nvim"] or require("lazy.core.config").plugins["windsurf.vim"] or require("lazy.core.config").plugins["codeium.nvim"])' '+qall' > "$scratch/nvim-$flag.log" 2>&1
+  nvim --headless --cmd "$no_install" \
+    '+lua assert(vim.env.DOTFILES_PI_OVERWATCH == os.getenv("DOTFILES_PI_OVERWATCH")); assert(vim.g.mapleader == " "); assert(require("lazy.core.config").plugins["windsurf.nvim"] or require("lazy.core.config").plugins["windsurf.vim"] or require("lazy.core.config").plugins["codeium.nvim"])' \
+    '+lua local plugins = require("lazy.core.config").plugins; assert(plugins.fff and not plugins["telescope.nvim"]); assert(type(require("fff").find_files) == "function"); assert(vim.fn.maparg(" sf", "n", false, true).desc == "Search files"); assert(vim.fn.maparg("  ", "n", false, true).desc == "Find files"); assert(vim.fn.maparg(" gw", "n", false, true).desc == "Git worktree changes"); assert(vim.fn.maparg(" sd", "n", false, true).desc == "List diagnostics (quickfix)")' \
+    '+qall' > "$scratch/nvim-$flag.log" 2>&1
   if grep -E 'Error|E[0-9]{3}:|stack traceback|Failed' "$scratch/nvim-$flag.log"; then
     exit 1
   fi
 done
 printf 'PASS: Neovim headless startup, both flag states, copied plugins and isolated XDG paths\n'
+if ! nvim --headless -i NONE --cmd "$no_install" "$REPO_DIR/config/nvim/lua/config/keymaps.lua" \
+  '+lua assert(vim.treesitter.highlighter.active[vim.api.nvim_get_current_buf()], "Lua Tree-sitter highlighting did not start")' \
+  '+qall' > "$scratch/lua-buffer.log" 2>&1 ||
+  grep -Eq 'Error|E[0-9]{3}:|stack traceback|Failed' "$scratch/lua-buffer.log"; then
+  tail -n 30 "$scratch/lua-buffer.log" >&2
+  exit 1
+fi
+printf 'PASS: normal Lua buffer Tree-sitter highlighting\n'
 if [[ $# -gt 0 ]]; then
   # Explicit opt-in: start real Sorbet/Nix, including the API shell's normal
   # local-service hooks. No buffer writes, formatting, or gem installation.

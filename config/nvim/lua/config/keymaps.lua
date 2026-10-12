@@ -3,7 +3,8 @@ local map = vim.keymap.set
 vim.api.nvim_create_user_command('W', 'write', { desc = 'Write current buffer' })
 
 map('n', '<Esc>', '<cmd>nohlsearch<CR>')
-map('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic quickfix list' })
+map('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic location list' })
+map('n', '<leader>sd', vim.diagnostic.setqflist, { desc = 'List diagnostics (quickfix)' })
 map('n', '<leader>dd', function()
   vim.diagnostic.jump { count = 1 }
 end, { desc = 'Next diagnostic' })
@@ -23,11 +24,6 @@ map('n', '<leader>dW', function()
   vim.diagnostic.jump { count = -1, severity = vim.diagnostic.severity.WARN }
 end, { desc = 'Previous diagnostic warning' })
 map('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
-
-map('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-map('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-map('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-map('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 map('n', '<leader>e', '<cmd>Neotree toggle filesystem left<CR>', { desc = 'Toggle explorer', silent = true })
 map('n', '<leader>o', '<cmd>Neotree reveal left<CR>', { desc = 'Reveal current file', silent = true })

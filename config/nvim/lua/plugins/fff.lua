@@ -9,6 +9,13 @@ return {
   },
   keys = {
     {
+      '<leader><leader>',
+      function()
+        require('fff').find_files()
+      end,
+      desc = 'Find files',
+    },
+    {
       '<leader>sf',
       function()
         require('fff').find_files()
