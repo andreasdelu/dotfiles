@@ -9,4 +9,4 @@
 - For the former general-purpose pickers, use `:help`, `:map`, `:buffers`, and `/`. `<leader>sd` opens diagnostics in quickfix; `gW` prompts for workspace symbols and opens quickfix.
 - Windsurf supplies inline suggestions. Ruby spec discovery and custom statusline rendering are intentionally absent.
 
-These plugins are shared across platforms; AI and animation preferences are not dotfiles feature flags. Keep `lazy-lock.json` tracked. Prefer deleting unused behavior over adding fallback branches. Check `scripts/test_nvim.sh` and the real project workflow before changing Sorbet or Tree-sitter startup.
+These plugins are shared across platforms; AI and animation preferences are not dotfiles feature flags. Keep `lazy-lock.json` tracked. Prefer deleting unused behavior over adding fallback branches. Check `scripts/tests/test_nvim.sh` and the real project workflow before changing Sorbet or Tree-sitter startup.

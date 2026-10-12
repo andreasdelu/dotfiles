@@ -1,0 +1,14 @@
+# Preferences precede shell and tool setup; child processes inherit the flags.
+if [[ -r "$HOME/.config/dotfiles/env.sh" ]]; then
+  source "$HOME/.config/dotfiles/env.sh"
+  dotfiles_load_preferences "$HOME/.config/dotfiles/local.env"
+fi
+
+# Landfolk loads Nix before PATH and plugins; the rest is explicitly ordered.
+source "$HOME/.config/zsh/landfolk.sh"
+source "$HOME/.config/zsh/environment.sh"
+source "$HOME/.config/zsh/plugins.sh"
+source "$HOME/.config/zsh/general.sh"
+
+# A minimal installation without optional tools should still start successfully.
+true

@@ -2,13 +2,13 @@
 # validate-config takes an explicit file; show-config on macOS can read the
 # account's Library config despite HOME, so it is not used for isolation.
 set -euo pipefail
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 command -v ghostty >/dev/null || { echo 'SKIP: Ghostty CLI not installed'; exit 0; }
 scratch="$(mktemp -d)"
 trap 'rm -rf "$scratch"' EXIT
 export HOME="$scratch"
 mkdir -p "$HOME/.config/ghostty/shaders"
-cp "$REPO_DIR/config/.ghostty" "$HOME/base.conf"
+cp "$REPO_DIR/config/ghostty/config" "$HOME/base.conf"
 ghostty +validate-config --config-file="$HOME/base.conf"
 cp "$REPO_DIR/config/ghostty/pane-dimming.conf" "$HOME/.config/ghostty/"
 cp "$REPO_DIR/config/ghostty/shaders/tmux-pane-dimmer.glsl" "$HOME/.config/ghostty/shaders/"
