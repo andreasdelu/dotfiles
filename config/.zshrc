@@ -44,7 +44,7 @@ zstyle ':omz:update' mode auto
 
 plugins=()
 if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
-  for plugin in git aliases fzf z timer zsh-autosuggestions; do
+  for plugin in git aliases fzf zoxide timer zsh-autosuggestions; do
     [[ "$plugin" == fzf ]] && (( ! $+commands[fzf] )) && continue
     if [[ -d "${ZSH_CUSTOM:-$ZSH/custom}/plugins/$plugin" || -d "$ZSH/plugins/$plugin" ]]; then
       plugins+=("$plugin")
@@ -112,6 +112,10 @@ grbia() {
 updatedotfiles() {
   local dotfiles_dir="$HOME/.dotfiles"
   git -C "$dotfiles_dir" pull origin main && "$dotfiles_dir/bootstrap.sh"
+}
+
+tmuxhere() {
+  tmux if-shell -F -t "$TMUX_PANE" '1' 'attach-session -c "#{pane_current_path}"'
 }
 
 # A minimal installation without optional tools should still start successfully.

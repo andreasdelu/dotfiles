@@ -1,33 +1,12 @@
-# Neovim Config
+# Neovim config
 
-This config is organized around a small bootstrap and explicit modules:
+`init.lua` loads `lua/config/` (options, keymaps, autocmds, lazy.nvim). Each file in `lua/plugins/` owns one plugin; `after/` contains Ruby syntax and Tree-sitter overrides.
 
-- `init.lua`: bootstrap only
-- `lua/config`: editor-wide options, keymaps, autocmds, and lazy setup
-- `lua/plugins`: plugin specs grouped by responsibility
-- `after/`: filetype-specific syntax and treesitter overrides
+- Neovim 0.12 supplies default LSP mappings and `:lsp` commands. `lspconfig.lua` keeps server overrides, diagnostics, and extra mappings.
+- Sorbet starts only where `sorbet/config` exists, using the enclosing Sorbet workspace even for nested gems. `lua/config/ruby.lua` recognizes Landfolk API checkouts by project markers, regardless of checkout location, and selects their Nix command. Other Sorbet projects use `srb` on PATH.
+- RuboCop is manual via `<leader>l`; Syntax Tree formats `.rb` on save or with `<leader>f`. Both prefer project binstubs; Ruby and Nix tooling must be installed separately.
+- FFF handles file finding, grep, and resume. `<leader><leader>` opens its file finder (not unsaved buffers). Neo-tree shows Git status via `<leader>gw` or `gs` in the tree; Gitsigns shows working-tree hunks. Use Git tooling for branch diffs rather than a custom picker.
+- For the former general-purpose pickers, use `:help`, `:map`, `:buffers`, and `/`. `<leader>sd` opens diagnostics in quickfix; `gW` prompts for workspace symbols and opens quickfix.
+- Windsurf supplies inline suggestions. Ruby spec discovery and custom statusline rendering are intentionally absent.
 
-## Plugin layout
-
-- `colorscheme.lua`: theme setup
-- `statusline.lua`, `treesitter.lua`, `gitsigns.lua`, `ufo.lua`: editing UI
-- `fff.lua`, `telescope.lua`, `neo-tree.lua`, `harpoon.lua`, `vim-tmux-navigator.lua`: navigation
-- `lspconfig.lua`, `blink-cmp.lua`, `conform.lua`: LSP, completion, formatting
-- `lint.lua`, `ruby-spec.lua`: Ruby linting and spec helpers
-- `windsurf.lua`: active AI completion; `copilot.lua` is disabled
-
-These plugins are shared across platforms. AI and animation preferences are not
-part of the dotfiles feature flags. Sorbet remains gated on the nearest enclosing
-`sorbet/config`, so Ruby files in nested gems share the parent Sorbet workspace.
-`lua/config/ruby.lua` recognizes Landfolk's API by repository markers and runs
-the existing API Nix command from the detected root, independent of checkout
-location. Other Sorbet projects use `srb` on PATH. Nix/flakes and project gems
-must be installed separately. Rubocop/Syntax Tree retain project binstubs and
-are limited to actual `.rb` files; their Ruby runtime comes from the shell.
-
-## Maintenance rules
-
-- Put global editor state in `lua/config`, not inside plugin spec files.
-- Give each plugin one authoritative config source.
-- Treat new plugins as opt-in: if a plugin is not part of daily editing, navigation, or language tooling, do not add it to the core set.
-- Keep `lazy-lock.json` tracked so updates stay reproducible.
+These plugins are shared across platforms; AI and animation preferences are not dotfiles feature flags. Keep `lazy-lock.json` tracked. Prefer deleting unused behavior over adding fallback branches. Check `scripts/test_nvim.sh` and the real project workflow before changing Sorbet or Tree-sitter startup.

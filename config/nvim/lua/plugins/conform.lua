@@ -8,14 +8,6 @@ local function ruby_root(bufnr)
   return vim.fs.root(bufnr or 0, { 'Gemfile', '.git' })
 end
 
-local function ruby_formatters(bufnr)
-  if require('config.ruby').is_landfolk_api(ruby_root(bufnr)) then
-    return { 'landfolk_api_stree' }
-  end
-
-  return { 'syntax_tree' }
-end
-
 return {
   'stevearc/conform.nvim',
   event = 'BufWritePre',
@@ -30,17 +22,15 @@ return {
           pcall(vim.cmd, 'LspEslintFixAll')
         end
 
-        if is_ruby_file(bufnr) then
-          require('conform').format {
-            async = false,
-            timeout_ms = 30000,
-            lsp_format = 'never',
-            formatters = ruby_formatters(bufnr),
-          }
+        if vim.bo[bufnr].filetype == 'ruby' and not is_ruby_file(bufnr) then
           return
         end
 
-        require('conform').format { async = false, lsp_format = 'never' }
+        require('conform').format {
+          async = false,
+          timeout_ms = vim.bo[bufnr].filetype == 'ruby' and 30000 or nil,
+          lsp_format = 'never',
+        }
       end,
       mode = { 'n', 'v' },
       desc = 'Fix and format buffer',
@@ -61,6 +51,7 @@ return {
         scss = true,
         markdown = true,
         ruby = true,
+        rust = true,
       }
 
       if not format_on_save_filetypes[vim.bo[bufnr].filetype] then
@@ -77,25 +68,11 @@ return {
       }
     end,
     formatters = {
-      landfolk_api_stree = function(bufnr)
-        local root = ruby_root(bufnr)
-
-        return {
-          inherit = false,
-          command = './bin/stree',
-          stdin = false,
-          args = { 'write', '$FILENAME' },
-          cwd = function()
-            return root
-          end,
-        }
-      end,
       syntax_tree = function(bufnr)
-        local root = ruby_root(bufnr)
-
+        local root = ruby_root(bufnr) or vim.fn.getcwd()
         return {
           inherit = false,
-          command = 'bin/stree',
+          command = root .. '/bin/stree',
           stdin = false,
           args = { 'write', '$FILENAME' },
           cwd = function()
@@ -106,16 +83,17 @@ return {
     },
     formatters_by_ft = {
       lua = { 'stylua' },
-      javascript = { 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
-      javascriptreact = { 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
-      typescript = { 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
-      typescriptreact = { 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
-      ruby = ruby_formatters,
-      json = { 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
-      jsonc = { 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
-      css = { 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
+      javascript = { 'oxfmt', 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
+      javascriptreact = { 'oxfmt', 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
+      typescript = { 'oxfmt', 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
+      typescriptreact = { 'oxfmt', 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
+      ruby = { 'syntax_tree' },
+      rust = { 'rustfmt' },
+      json = { 'oxfmt', 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
+      jsonc = { 'oxfmt', 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
+      css = { 'oxfmt', 'biome-check', 'prettierd', 'prettier', stop_after_first = true },
       scss = { 'prettierd', 'prettier', stop_after_first = true },
-      markdown = { 'prettierd', 'prettier', stop_after_first = true },
+      markdown = { 'oxfmt', 'prettierd', 'prettier', stop_after_first = true },
     },
   },
 }

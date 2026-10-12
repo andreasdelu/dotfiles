@@ -16,6 +16,15 @@ return {
     'MunifTanjim/nui.nvim',
     's1n7ax/nvim-window-picker',
   },
+  keys = {
+    {
+      '<leader>gw',
+      function()
+        require('neo-tree.command').execute { action = 'focus', source = 'git_status', position = 'left' }
+      end,
+      desc = 'Git worktree changes',
+    },
+  },
   opts = {
     -- The git-status source refreshes synchronously; let the filesystem watcher
     -- update the normal tree without blocking every write.

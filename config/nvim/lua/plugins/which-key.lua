@@ -42,7 +42,7 @@ return {
       { '<leader>gh', group = 'Git Hunk', mode = { 'n', 'v' } },
       { '<leader>h', group = 'Harpoon' },
       { '<leader>m', group = 'Multicursor' },
-      { '<leader>t', group = 'Test / Toggle' },
+      { '<leader>t', group = 'Toggle' },
       { '<leader>l', group = 'LSP' },
       { '<leader>c', group = 'Copy' },
       { '<leader>r', group = 'Replace' },

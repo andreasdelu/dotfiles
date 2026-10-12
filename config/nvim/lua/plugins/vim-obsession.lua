@@ -1,7 +1,7 @@
 local function has_special_startup_arg()
   for index = 2, #vim.v.argv do
     local arg = vim.v.argv[index]
-    if arg == '-' or arg == '-S' or arg:match('^-S.') or arg == '-c' or arg:match('^-c.') or arg:match('^%+') then
+    if arg == '-' or arg == '-S' or arg:match '^-S.' or arg == '-c' or arg:match '^-c.' or arg:match '^%+' then
       return true
     end
   end
@@ -42,7 +42,7 @@ local function auto_session_cwd()
   end
 
   local result = vim.system({ 'git', '-C', cwd, 'rev-parse', '--is-inside-work-tree' }, { text = true }):wait()
-  if result.code == 0 and result.stdout:match('true') ~= nil then
+  if result.code == 0 and result.stdout:match 'true' ~= nil then
     return cwd
   end
 end
@@ -69,7 +69,5 @@ return {
       callback = auto_track_session,
       desc = 'Automatically track tmux Neovim sessions in git worktrees',
     })
-
-    auto_track_session()
   end,
 }
