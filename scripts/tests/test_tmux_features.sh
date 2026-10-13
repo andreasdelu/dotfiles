@@ -20,6 +20,12 @@ cp "$REPO_DIR/config/ghostty/pane-dimming.conf" "$HOME/.config/ghostty/"
 t() { "$TMUX_BIN" -S "$scratch/socket" "$@"; }
 DOTFILES_GHOSTTY_PANE_DIMMING=0 t -f "$HOME/.tmux.conf" new-session -d -s test 'sleep 120'
 [[ "$(t show-option -gqv @dotfiles-pane-dimming)" == off ]]
+[[ "$(t show-option -gqv popup-style)" == 'bg=default,fg=default' ]] || {
+  echo 'Popup background must follow the terminal default' >&2; exit 1;
+}
+[[ "$(t show-option -gqv popup-border-style)" == 'bg=default,fg=colour8' ]] || {
+  echo 'Popup border must use the terminal background and subdued ANSI grey' >&2; exit 1;
+}
 t set-hook -g 'client-attached[42]' 'display-message unrelated'
 t set-environment -g DOTFILES_GHOSTTY_PANE_DIMMING 1
 t source-file "$HOME/.tmux.conf"
