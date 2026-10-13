@@ -12,4 +12,5 @@ alias tgqd='task graphql:dump'
 if [[ -x "$HOME/Documents/pax/bin/pax" ]]; then
   alias pax='~/Documents/pax/bin/pax --cwd "$PWD"'
   alias paxc='~/Documents/pax/bin/pax --cwd "$PWD" --continue'
+  alias supervised='~/Documents/pax/bin/pax supervised'
 fi
