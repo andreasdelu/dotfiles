@@ -6,7 +6,7 @@ window-colorspace = display-p3
 window-width = 120
 window-height = 30
 window-padding-balance = true
-macos-titlebar-style = transparent
+macos-titlebar-style = tabs
 palette-generate = false
 
 shell-integration = zsh

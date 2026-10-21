@@ -10,5 +10,8 @@ source "$HOME/.config/zsh/environment.sh"
 source "$HOME/.config/zsh/plugins.sh"
 source "$HOME/.config/zsh/general.sh"
 
+# added by ghostwriter install.sh
+export PATH="/Users/andreasdeleuran/.ghostwriter/bin:$PATH"
+
 # A minimal installation without optional tools should still start successfully.
 true
