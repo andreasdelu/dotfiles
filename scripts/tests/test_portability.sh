@@ -6,7 +6,7 @@ scratch="$(mktemp -d)"
 trap 'rm -rf "$scratch"' EXIT
 mkdir -p "$scratch/repo" "$scratch/home" "$scratch/bin"
 cp -R "$REPO_DIR/config" "$REPO_DIR/scripts" "$REPO_DIR/maps" "$scratch/repo/"
-rm -f "$scratch/repo/config/dotfiles/local.env"
+rm -f "$scratch/repo/config/dotfiles/local.env" "$scratch/repo/config/zsh/env.sh"
 export HOME="$scratch/home"
 unset TMUX DOTFILES_GHOSTTY_PANE_DIMMING
 
@@ -78,8 +78,35 @@ env -i HOME="$HOME" PATH=/usr/bin:/bin TERM=xterm-256color zsh -d -i -c '[[ -z $
 mkdir -p "$HOME/Documents/pax/bin"
 printf '#!/bin/sh\nexit 0\n' > "$HOME/Documents/pax/bin/pax"
 chmod +x "$HOME/Documents/pax/bin/pax"
-env -i HOME="$HOME" PATH=/usr/bin:/bin TERM=xterm-256color zsh -d -i -c '[[ -n ${aliases[pax]-} && -n ${aliases[paxc]-} ]]' > "$scratch/pax-out" 2> "$scratch/pax-err"
+# An installed checkout alone must not opt the machine into Pax aliases.
+for setting in unset empty invalid; do
+  pax_env=()
+  case "$setting" in
+    empty) pax_env=(PAX_HOME=) ;;
+    invalid) pax_env=(PAX_HOME="$HOME/missing-pax") ;;
+  esac
+  env -i HOME="$HOME" PATH=/usr/bin:/bin TERM=xterm-256color "${pax_env[@]}" zsh -d -i -c '[[ -z ${aliases[pax]-} && -z ${aliases[paxc]-} && -z ${aliases[supervised]-} ]]' > "$scratch/pax-out" 2> "$scratch/pax-err"
+  [[ ! -s "$scratch/pax-err" ]]
+done
+# Exercise the real aliases with a custom checkout path containing spaces.
+mkdir -p "$HOME/custom pax/bin"
+printf '#!/bin/sh\nprintf "%%s\\n" "$@"\n' > "$HOME/custom pax/bin/pax"
+chmod +x "$HOME/custom pax/bin/pax"
+env -i HOME="$HOME" PATH=/usr/bin:/bin TERM=xterm-256color PAX_HOME="$HOME/custom pax" zsh -d -i -c '
+  [[ "$(pax)" == "$(printf "%s\n" --cwd "$PWD")" ]] &&
+  [[ "$(paxc)" == "$(printf "%s\n" --cwd "$PWD" --continue)" ]] &&
+  [[ "$(supervised)" == supervised ]]
+' > "$scratch/pax-out" 2> "$scratch/pax-err"
 [[ ! -s "$scratch/pax-err" ]]
+# Machine-local shell config loads before aliases and exports both checkout paths.
+cp "$scratch/repo/config/zsh/env.sh.example" "$scratch/repo/config/zsh/env.sh"
+printf 'export PAX_HOME="$HOME/custom pax"\nexport LANDFOLK_HOME="$HOME/custom landfolk"\n' >> "$scratch/repo/config/zsh/env.sh"
+env -i HOME="$HOME" PATH=/usr/bin:/bin TERM=xterm-256color zsh -d -i -c '
+  [[ "$(pax-status)" == pax-status ]] &&
+  [[ "$LANDFOLK_HOME" == "$HOME/custom landfolk" ]] &&
+  sh -c '\''test "$PAX_HOME" = "$HOME/custom pax" && test "$LANDFOLK_HOME" = "$HOME/custom landfolk"'\''
+' > "$scratch/local-env-out" 2> "$scratch/local-env-err"
+[[ ! -s "$scratch/local-env-err" ]]
 # The remaining opt-in loads as data, without overriding explicit zero or empty.
 printf 'DOTFILES_GHOSTTY_PANE_DIMMING=1\n' > "$scratch/repo/config/dotfiles/local.env"
 for shell in bash zsh; do

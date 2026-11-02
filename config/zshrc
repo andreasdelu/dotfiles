@@ -4,6 +4,11 @@ if [[ -r "$HOME/.config/dotfiles/env.sh" ]]; then
   dotfiles_load_preferences "$HOME/.config/dotfiles/local.env"
 fi
 
+# Machine-local paths must be available before aliases and tool setup.
+if [[ -r "$HOME/.config/zsh/env.sh" ]]; then
+  source "$HOME/.config/zsh/env.sh"
+fi
+
 # Landfolk loads Nix before PATH and plugins; the rest is explicitly ordered.
 source "$HOME/.config/zsh/landfolk.sh"
 source "$HOME/.config/zsh/environment.sh"

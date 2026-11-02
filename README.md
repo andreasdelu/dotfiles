@@ -14,6 +14,8 @@ Bootstrap lets you choose which steps to run. macOS uses Homebrew, while Linux p
 
 Existing files are backed up before linking. macOS system defaults need a separate confirmation.
 
+The macOS defaults include keyboard repeat speed (`KeyRepeat=2`) and delay (`InitialKeyRepeat=15`). Apply them through bootstrap or `bash scripts/set_macos_defaults.sh`, then log out and back in for keyboard changes to take effect.
+
 The config needs zsh, tmux 3.3+ and Neovim 0.12+ with Tree-sitter CLI 0.26.1+. On Linux, the package step installs the editor tools under `~/.local/bin`, so restart your shell afterwards. Project dependencies and some formatter/LSP executables still need installing separately.
 
 ## Changing things
@@ -27,6 +29,18 @@ After changing the mappings or optional features, run:
 ```
 
 Add `DRY_RUN=1 DOTFILES_ASSUME_YES=1` to preview the changes.
+
+### Machine-local environment
+
+Copy the example from the repo root, then edit the checkout paths for this machine:
+
+```sh
+cp config/zsh/env.sh.example config/zsh/env.sh
+```
+
+`config/zsh/env.sh` is gitignored and available at `~/.config/zsh/env.sh` through the existing directory link. `.zshrc` sources it before aliases and tool setup, and safely skips it when missing. It is shell code, separate from the restricted Ghostty preferences in `config/dotfiles/local.env`.
+
+The example sets `PAX_HOME` and `LANDFOLK_HOME`. Move any existing definitions from `~/.zshenv` into this file to keep one source of truth, then start a new shell. The `pax`, `paxc`, `supervised`, and `pax-status` aliases are only defined when `PAX_HOME` is nonempty and `$PAX_HOME/bin/pax` is executable; there is no default checkout path.
 
 ### Optional Ghostty pane dimming
 

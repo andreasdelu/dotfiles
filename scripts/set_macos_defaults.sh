@@ -15,10 +15,13 @@ set_macos_defaults() {
   defaults write com.apple.dock show-recents -int 0
   # Enable click for trackpads
   defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -int 1
+  # Preserve the current keyboard repeat speed and delay (in 1/60-second units).
+  defaults write NSGlobalDomain KeyRepeat -int 2
+  defaults write NSGlobalDomain InitialKeyRepeat -int 15
   # Kill Dock to apply changes
   killall Dock
 
-  echo "macOS defaults configured."
+  echo "macOS defaults configured. Log out and back in for keyboard repeat changes to take effect."
 }
 
 main() {

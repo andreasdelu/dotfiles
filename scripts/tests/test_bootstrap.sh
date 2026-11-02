@@ -137,7 +137,9 @@ STUB
 chmod +x "$scratch/bin/defaults" "$scratch/bin/killall"
 DOTFILES_ASSUME_YES=1 bash "$scratch/repo/scripts/set_macos_defaults.sh" <<< y > /dev/null
 [[ ! -e "$TEST_SUDO" ]]
-[[ $(wc -l < "$TEST_DEFAULTS") -eq 5 ]]
+[[ $(wc -l < "$TEST_DEFAULTS") -eq 7 ]]
 grep -q '^write com.apple.dock autohide -int 0$' "$TEST_DEFAULTS"
+grep -qx 'write NSGlobalDomain KeyRepeat -int 2' "$TEST_DEFAULTS"
+grep -qx 'write NSGlobalDomain InitialKeyRepeat -int 15' "$TEST_DEFAULTS"
 grep -qx 'Dock' "$TEST_KILLALL"
 printf 'PASS: simulated OS package steps, macOS casks/consent, TPM without Brewfile\n'
