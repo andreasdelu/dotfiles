@@ -82,8 +82,8 @@ chmod +x "$HOME/Documents/pax/bin/pax"
 for setting in unset empty invalid; do
   pax_env=()
   case "$setting" in
-    empty) pax_env=(PAX_HOME=) ;;
-    invalid) pax_env=(PAX_HOME="$HOME/missing-pax") ;;
+    empty) pax_env=(PAX_REPO=) ;;
+    invalid) pax_env=(PAX_REPO="$HOME/missing-pax") ;;
   esac
   env -i HOME="$HOME" PATH=/usr/bin:/bin TERM=xterm-256color "${pax_env[@]}" zsh -d -i -c '[[ -z ${aliases[pax]-} && -z ${aliases[paxc]-} && -z ${aliases[supervised]-} ]]' > "$scratch/pax-out" 2> "$scratch/pax-err"
   [[ ! -s "$scratch/pax-err" ]]
@@ -92,7 +92,7 @@ done
 mkdir -p "$HOME/custom pax/bin"
 printf '#!/bin/sh\nprintf "%%s\\n" "$@"\n' > "$HOME/custom pax/bin/pax"
 chmod +x "$HOME/custom pax/bin/pax"
-env -i HOME="$HOME" PATH=/usr/bin:/bin TERM=xterm-256color PAX_HOME="$HOME/custom pax" zsh -d -i -c '
+env -i HOME="$HOME" PATH=/usr/bin:/bin TERM=xterm-256color PAX_REPO="$HOME/custom pax" zsh -d -i -c '
   [[ "$(pax)" == "$(printf "%s\n" --cwd "$PWD")" ]] &&
   [[ "$(paxc)" == "$(printf "%s\n" --cwd "$PWD" --continue)" ]] &&
   [[ "$(supervised)" == supervised ]]
@@ -100,11 +100,12 @@ env -i HOME="$HOME" PATH=/usr/bin:/bin TERM=xterm-256color PAX_HOME="$HOME/custo
 [[ ! -s "$scratch/pax-err" ]]
 # Machine-local shell config loads before aliases and exports both checkout paths.
 cp "$scratch/repo/config/zsh/env.sh.example" "$scratch/repo/config/zsh/env.sh"
-printf 'export PAX_HOME="$HOME/custom pax"\nexport LANDFOLK_HOME="$HOME/custom landfolk"\n' >> "$scratch/repo/config/zsh/env.sh"
+printf 'export PAX_REPO="$HOME/custom pax"\nexport LANDFOLK_HOME="$HOME/custom landfolk"\n' >> "$scratch/repo/config/zsh/env.sh"
 env -i HOME="$HOME" PATH=/usr/bin:/bin TERM=xterm-256color zsh -d -i -c '
   [[ "$(pax-status)" == pax-status ]] &&
   [[ "$LANDFOLK_HOME" == "$HOME/custom landfolk" ]] &&
-  sh -c '\''test "$PAX_HOME" = "$HOME/custom pax" && test "$LANDFOLK_HOME" = "$HOME/custom landfolk"'\''
+  [[ "$PAX_HOME" == "$HOME/.pax" ]] &&
+  sh -c '\''test "$PAX_REPO" = "$HOME/custom pax" && test "$LANDFOLK_HOME" = "$HOME/custom landfolk"'\''
 ' > "$scratch/local-env-out" 2> "$scratch/local-env-err"
 [[ ! -s "$scratch/local-env-err" ]]
 # The remaining opt-in loads as data, without overriding explicit zero or empty.

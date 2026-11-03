@@ -5,6 +5,10 @@ return {
   end,
   lazy = false,
   opts = {
+    -- Set explicitly: the startup hook checks raw options before defaults merge.
+    lazy_sync = true,
+    -- Each instance otherwise indexes and watches the entire home directory.
+    enable_home_dir_scanning = false,
     prompt_vim_mode = true,
   },
   keys = {

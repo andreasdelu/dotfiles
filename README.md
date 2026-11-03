@@ -40,7 +40,7 @@ cp config/zsh/env.sh.example config/zsh/env.sh
 
 `config/zsh/env.sh` is gitignored and available at `~/.config/zsh/env.sh` through the existing directory link. `.zshrc` sources it before aliases and tool setup, and safely skips it when missing. It is shell code, separate from the restricted Ghostty preferences in `config/dotfiles/local.env`.
 
-The example sets `PAX_HOME` and `LANDFOLK_HOME`. Move any existing definitions from `~/.zshenv` into this file to keep one source of truth, then start a new shell. The `pax`, `paxc`, `supervised`, and `pax-status` aliases are only defined when `PAX_HOME` is nonempty and `$PAX_HOME/bin/pax` is executable; there is no default checkout path.
+The example sets `PAX_REPO` and `LANDFOLK_HOME` for checkout paths, and `PAX_HOME` to `~/.pax` for mutable runtime state. Keep these distinct: pointing `PAX_HOME` at the checkout writes sessions and credentials into the repository. Move any existing definitions from `~/.zshenv` into this file to keep one source of truth, then start a new shell. The `pax`, `paxc`, `supervised`, and `pax-status` aliases are only defined when `PAX_REPO` is nonempty and `$PAX_REPO/bin/pax` is executable; there is no default checkout path.
 
 ### Optional Ghostty pane dimming
 
