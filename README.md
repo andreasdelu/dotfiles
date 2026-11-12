@@ -42,6 +42,16 @@ cp config/zsh/env.sh.example config/zsh/env.sh
 
 The example sets `PAX_REPO` and `LANDFOLK_HOME` for checkout paths, and `PAX_HOME` to `~/.pax` for mutable runtime state. Keep these distinct: pointing `PAX_HOME` at the checkout writes sessions and credentials into the repository. Move any existing definitions from `~/.zshenv` into this file to keep one source of truth, then start a new shell. The `pax`, `paxc`, `supervised`, and `pax-status` aliases are only defined when `PAX_REPO` is nonempty and `$PAX_REPO/bin/pax` is executable; there is no default checkout path.
 
+### Worktree popup
+
+`prefix + W` uses the compiled `~/Documents/twm` checkout through its persistent `scripts/popup.sh` launcher. Build it with `cd ~/Documents/twm && bun run compile`, then reload `~/.tmux.conf`. The binding is enabled only when the binary and launcher exist. Invoking-client/session IDs are passed explicitly; closing the popup detaches its hidden helper so queued work can finish. This local checkout route replaces the TPM-installed binary route.
+
+### Automatic tmux saves
+
+Continuum saves through a command in `status-right`, so it must stay last in the TPM plugin list, after the theme. Saves use its default 15-minute interval; automatic restore runs only when a new tmux server starts, not on config reload.
+
+The post-TPM `config/tmux/bin/enable-continuum-with-twm` adapter exempts only the current host's `${socket}.twm` popup server from continuum's multi-server guard. Every helper session must carry TWM's popup and host-socket markers. Other tmux servers still prevent autosave initialization to avoid competing snapshots. Reload `~/.tmux.conf` after changing this configuration; `bash scripts/tests/test_tmux_continuum.sh` checks the adapter in isolated servers.
+
 ### Optional Ghostty pane dimming
 
 On macOS, copy `config/dotfiles/local.env.example` to `config/dotfiles/local.env` and set `DOTFILES_GHOSTTY_PANE_DIMMING=1`. This needs Ghostty on PATH and tmux 3.7+.

@@ -60,13 +60,14 @@ t set-environment -g DOTFILES_GHOSTTY_PANE_DIMMING 1
 t source-file "$HOME/.tmux.conf"
 [[ "$(t show-option -gqv @dotfiles-pane-dimming)" == off ]]
 # TWM itself remains an optional worktree picker.
-mkdir -p "$HOME/.tmux/plugins/tmux-worktree-manager/dist"
-printf '#!/bin/sh\nexit 0\n' > "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm"
-chmod +x "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm"
+mkdir -p "$HOME/Documents/twm/dist" "$HOME/Documents/twm/scripts"
+printf '#!/bin/sh\nexit 0\n' > "$HOME/Documents/twm/dist/twm"
+printf '#!/bin/sh\nexit 0\n' > "$HOME/Documents/twm/scripts/popup.sh"
+chmod +x "$HOME/Documents/twm/dist/twm"
 t source-file "$HOME/.tmux.conf"
 t list-keys -T prefix | grep 'prefix W ' | grep -q worktrees
 t list-keys -T prefix | grep 'prefix W ' | grep -q worktrees
-rm "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm"
+rm "$HOME/Documents/twm/dist/twm"
 t source-file "$HOME/.tmux.conf"
 ! t list-keys -T prefix | grep 'prefix W ' | grep -q worktrees
 printf 'PASS: isolated tmux, dimming off-on-off, unrelated hooks, optional TWM binding\n'

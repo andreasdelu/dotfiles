@@ -43,6 +43,9 @@ if ! nvim --headless -i NONE --cmd "$no_install" "$REPO_DIR/config/nvim/lua/conf
   exit 1
 fi
 printf 'PASS: normal Lua buffer Tree-sitter highlighting\n'
+export DOTFILES_TEST_REPO="$REPO_DIR"
+nvim --headless -u NONE -i NONE -l "$REPO_DIR/scripts/tests/nvim_scroll.lua"
+nvim --headless -u NONE -i NONE -l "$REPO_DIR/scripts/tests/nvim_statusline.lua"
 if [[ $# -gt 0 ]]; then
   # Explicit opt-in: start real Sorbet/Nix, including the API shell's normal
   # local-service hooks. No buffer writes, formatting, or gem installation.

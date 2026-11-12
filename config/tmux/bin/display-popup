@@ -30,9 +30,13 @@ case "$kind" in
       '
     ;;
   worktrees)
-    [[ -x "$HOME/.tmux/plugins/tmux-worktree-manager/dist/twm" ]] || exit 0
+    twm_dir="$HOME/Documents/twm"
+    [[ -x "$twm_dir/dist/twm" && -f "$twm_dir/scripts/popup.sh" ]] || exit 0
+    origin_session="$(tmux display-message -p -t "$pane" '#{session_id}')"
+    printf -v popup_command 'bash %q' "$twm_dir/scripts/popup.sh"
     tmux display-popup -c "$client" -t "$pane" -E -h '80%' -w '80%' \
-      ~/.tmux/plugins/tmux-worktree-manager/scripts/run.sh
+      -e "TWM_ORIGIN_CLIENT=$client" -e "TWM_ORIGIN_SESSION=$origin_session" \
+      "$popup_command"
     ;;
   lazygit)
     command -v lazygit >/dev/null 2>&1 || exit 0

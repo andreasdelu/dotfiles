@@ -1,29 +1,36 @@
 return {
   'petertriho/nvim-scrollbar',
+  -- v2 lives here until it replaces main; keep its config and revision together.
+  branch = 'refactor/v2',
   event = 'VeryLazy',
   opts = {
-    show = true,
-    show_in_active_only = false,
-    hide_if_all_visible = false,
-    excluded_buftypes = { 'terminal', 'prompt', 'nofile' },
-    excluded_filetypes = { 'neo-tree', 'neo-tree-popup', 'TelescopePrompt' },
-    handlers = {
+    scrollbar = {
+      show = true,
+      visibility = 'all',
+      hide_if_all_visible = false,
+      throttle_ms = 100,
+    },
+    exclude = {
+      buftypes = { 'terminal', 'prompt', 'nofile' },
+      filetypes = { 'neo-tree', 'neo-tree-popup', 'TelescopePrompt' },
+    },
+    providers = {
       cursor = false,
       diagnostic = true,
       gitsigns = true,
-      handle = true,
       search = false,
+      marks = false,
     },
     marks = {
-      Search = { color = '#7aa2f7' },
-      Error = { color = '#f7768e' },
-      Warn = { color = '#e0af68' },
-      Info = { color = '#7dcfff' },
-      Hint = { color = '#9ece6a' },
-      Misc = { color = '#bb9af7' },
-      GitAdd = { color = '#9ece6a' },
-      GitChange = { color = '#7dcfff' },
-      GitDelete = { color = '#f7768e' },
+      Search = { highlight = { fg = '#7aa2f7' } },
+      Error = { highlight = { fg = '#f7768e' } },
+      Warn = { highlight = { fg = '#e0af68' } },
+      Info = { highlight = { fg = '#7dcfff' } },
+      Hint = { highlight = { fg = '#9ece6a' } },
+      Misc = { highlight = { fg = '#bb9af7' } },
+      GitAdd = { highlight = { fg = '#9ece6a' } },
+      GitChange = { highlight = { fg = '#7dcfff' } },
+      GitDelete = { highlight = { fg = '#f7768e' } },
     },
   },
 }

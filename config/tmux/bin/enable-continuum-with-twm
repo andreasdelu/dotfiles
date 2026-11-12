@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Continuum's process-count guard mistakes TWM's persistent popup server for
+# another workspace. Repair only that case, without changing installed plugins.
+save_script="$HOME/.tmux/plugins/tmux-continuum/scripts/continuum_save.sh"
+[[ -x "$save_script" ]] || exit 0
+[[ -n "$(tmux show-option -gqv @resurrect-save-script-path)" ]] || exit 0
+socket="$(tmux display-message -p '#{socket_path}')"
+server_pid="$(tmux display-message -p '#{pid}')"
+helper_pid="$(tmux -S "${socket}.twm" display-message -p '#{pid}' 2>/dev/null)" || exit 0
+# Only exempt a helper whose sessions all identify themselves as this host's
+# popup sessions. A regular workspace on the same socket must remain protected.
+helper_sessions="$(tmux -S "${socket}.twm" list-sessions -F '#{TWM_POPUP}:#{TWM_HOST_SOCKET}')"
+[[ -n "$helper_sessions" ]] || exit 0
+while IFS= read -r session; do
+  [[ "$session" == "1:$socket" ]] || exit 0
+done <<< "$helper_sessions"
+
+# Keep continuum's conservative process-count policy for every other server.
+other_processes="$(ps -u "$(id -u)" -o 'command pid' |
+  awk -v server="$server_pid" -v helper="$helper_pid" '
+    $1 ~ /^tmux/ && !($2 == "source" || $2 == "source-file") &&
+      $NF != server && $NF != helper { count++ }
+    END { print count+0 }
+  ')"
+clients="$(tmux list-clients | wc -l | tr -d ' ')"
+(( other_processes <= clients )) || exit 0
+
+# Match continuum's initial grace period so a reload never immediately replaces
+# the last snapshot. Preserve its existing timestamp and interval settings.
+if [[ -z "$(tmux show-option -gqv @continuum-save-last-timestamp)" ]]; then
+  tmux set-option -g @continuum-save-last-timestamp "$(date +%s)"
+fi
+status_right="$(tmux show-option -gqv status-right)"
+interpolation="#($save_script)"
+if [[ "$status_right" != *"$interpolation"* ]]; then
+  tmux set-option -g status-right "${interpolation}${status_right}"
+fi

@@ -4,7 +4,7 @@ return {
   opts = {
     ignored_events = { 'CursorMoved' },
     post_hook = function()
-      require('scrollbar').render()
+      require('scrollbar').refresh()
     end,
   },
 }

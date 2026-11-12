@@ -9,3 +9,4 @@
 config/tmux/plugins/*
 config/dotfiles/local.env
 config/zsh/env.sh
+.zshrc
