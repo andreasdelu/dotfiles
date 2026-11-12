@@ -27,7 +27,7 @@ for flag in 0 1; do
   export DOTFILES_GHOSTTY_PANE_DIMMING="$flag"
   # Startup-only mode opens no project file; real attachment is opt-in below.
   nvim --headless --cmd "$no_install" \
-    '+lua assert(vim.env.DOTFILES_GHOSTTY_PANE_DIMMING == os.getenv("DOTFILES_GHOSTTY_PANE_DIMMING")); assert(vim.g.mapleader == " "); assert(require("lazy.core.config").plugins["windsurf.nvim"] or require("lazy.core.config").plugins["windsurf.vim"] or require("lazy.core.config").plugins["codeium.nvim"])' \
+    '+lua assert(vim.env.DOTFILES_GHOSTTY_PANE_DIMMING == os.getenv("DOTFILES_GHOSTTY_PANE_DIMMING")); assert(vim.g.mapleader == " "); local plugins = require("lazy.core.config").plugins; assert(plugins["copilot.lua"]); assert(not plugins["windsurf.nvim"] and not plugins["codeium.nvim"] and not plugins["copilot.vim"])' \
     '+lua local plugins = require("lazy.core.config").plugins; assert(plugins.fff and not plugins["telescope.nvim"]); assert(type(require("fff").find_files) == "function"); assert(vim.fn.maparg(" sf", "n", false, true).desc == "Search files"); assert(vim.fn.maparg("  ", "n", false, true).desc == "Find files"); assert(vim.fn.maparg(" gw", "n", false, true).desc == "Git worktree changes"); assert(vim.fn.maparg(" sd", "n", false, true).desc == "List diagnostics (quickfix)")' \
     '+qall' > "$scratch/nvim-$flag.log" 2>&1
   if grep -E 'Error|E[0-9]{3}:|stack traceback|Failed' "$scratch/nvim-$flag.log"; then
@@ -44,6 +44,7 @@ if ! nvim --headless -i NONE --cmd "$no_install" "$REPO_DIR/config/nvim/lua/conf
 fi
 printf 'PASS: normal Lua buffer Tree-sitter highlighting\n'
 export DOTFILES_TEST_REPO="$REPO_DIR"
+nvim --headless -u NONE -i NONE -l "$REPO_DIR/scripts/tests/nvim_copilot.lua"
 nvim --headless -u NONE -i NONE -l "$REPO_DIR/scripts/tests/nvim_scroll.lua"
 nvim --headless -u NONE -i NONE -l "$REPO_DIR/scripts/tests/nvim_statusline.lua"
 if [[ $# -gt 0 ]]; then

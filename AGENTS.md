@@ -156,10 +156,10 @@ That `runtime` path append is important here because without it, queries may not
 
 #### Inline suggestions
 
-- plugin: `Exafunction/windsurf.nvim` (Codeium), loaded on `InsertEnter`
+- plugin: `zbirenbaum/copilot.lua`, loaded on `InsertEnter` or `:Copilot`
 - keybindings: `<C-l>` accept, `<C-j>` accept word, `<C-]>` dismiss, `<M-]>` next, `<M-[>` previous
 - `.env*` buffers disable suggestions; keep this protection when changing the plugin
-- Copilot is not configured; do not reintroduce a second suggestion engine casually.
+- Copilot is the only suggestion engine; do not reintroduce a second one casually.
 
 ## Useful file map
 

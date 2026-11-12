@@ -7,6 +7,6 @@
 - RuboCop is manual via `<leader>l`; Syntax Tree formats `.rb` on save or with `<leader>f`. Both prefer project binstubs; Ruby and Nix tooling must be installed separately.
 - FFF handles file finding, grep, and resume. `<leader><leader>` opens its file finder (not unsaved buffers). Neo-tree shows Git status via `<leader>gw` or `gs` in the tree; Gitsigns shows working-tree hunks. Use Git tooling for branch diffs rather than a custom picker.
 - For the former general-purpose pickers, use `:help`, `:map`, `:buffers`, and `/`. `<leader>sd` opens diagnostics in quickfix; `gW` prompts for workspace symbols and opens quickfix.
-- Windsurf supplies inline suggestions. Ruby spec discovery and custom statusline rendering are intentionally absent.
+- Copilot supplies automatic inline suggestions, loaded on `InsertEnter` or `:Copilot`. Use `:Copilot auth` to authenticate if needed. `<C-l>` accepts, `<C-j>` accepts a word, `<C-]>` dismisses, and `<M-]>` / `<M-[>` cycle suggestions. `.env*` filenames are blocked before attachment regardless of filetype; Oil and Neo-tree buffers are excluded too. Suggestions use muted italic text. Ruby spec discovery and custom statusline rendering are intentionally absent.
 
 These plugins are shared across platforms; AI and animation preferences are not dotfiles feature flags. Keep `lazy-lock.json` tracked. Prefer deleting unused behavior over adding fallback branches. Check `scripts/tests/test_nvim.sh` and the real project workflow before changing Sorbet or Tree-sitter startup.
