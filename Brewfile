@@ -1,6 +1,6 @@
 # macOS only. Selecting the Brewfile step installs both CLI tools and apps.
 abort "This Brewfile is macOS-only" unless OS.mac?
-cask "ghostty"
+cask "ghostty@tip"
 cask "spotify"
 cask "arc"
 cask "raycast"
